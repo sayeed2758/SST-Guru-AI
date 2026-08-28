@@ -1,47 +1,21 @@
-# 📚 SST GURU AI v3 — Layers 1–14
+# SST GURU AI — NEXT v5 (OFFLINE-FIRST WORKING)
 
-This is a substantial working starter build designed for an SST teacher.
+This build fixes the main issue visible in the screenshots: questions now get an immediate local SST answer even when no backend is connected.
 
-## Layer coverage
+## Main improvement
+- Offline-first answer engine
+- Follow-up understanding: "Ha samjhao", "aur detail", "continue" can use the previous topic
+- Stronger starter knowledge: Hitler, French Revolution, Industrial Revolution, Hyksos, River/Sea/Ocean, Weather/Climate, Latitude/Longitude, Democracy/Republic, Constitution, Inflation, GDP, Mercantilism, etc.
+- Story Mode gives an actual chronology for Hitler and French Revolution
+- No "Backend URL not configured" dead-end
+- If a valid backend URL is configured, live AI is attempted first; if it fails, local answer is shown
+- All previous UI tools retained
+- Mobile responsive
 
-1. Premium responsive UI/UX
-2. Dedicated learning modes
-3. Conversation engine
-4. Local personal preferences
-5. Local conversation history + export
-6. AI backend connector
-7. SST-only rules/prompt
-8. Starter SST knowledge base
-9. Retrieval layer (browser-side starter RAG)
-10. Accuracy-oriented backend instructions
-11. Explanation engine / modes
-12. Timeline + visual learning foundation
-13. Quiz + Teacher Studio + Exam tools
-14. Personal SST Library with local indexing
+## Upload
+Replace the old frontend files with the complete contents of this ZIP.
 
-## Buttons already wired
-- Ask SST
-- Story / Word / Difference / Exam / Teacher modes
-- New Conversation
-- Theme
-- Clear Local Data
-- Export Chat
-- Voice input
-- Read aloud
-- Copy
-- Make Simpler
-- Timeline Builder
-- Quiz Lab
-- Library upload/index/remove
-- Settings
+## Live AI
+Deploy `backend/worker.js` to Cloudflare Workers, add the secret `OPENAI_API_KEY`, then paste only the Worker URL in Settings.
 
-## Important
-The local SST demo brain works for built-in topics and provides structured fallback responses for other SST questions.
-For true deep open-ended AI, deploy `backend/worker.js`, add `OPENAI_API_KEY` to the Worker, and paste the Worker URL in Settings.
-
-## GitHub Pages
-Upload the project files to the root of a GitHub repository and enable GitHub Pages from the repository's Pages settings.
-
-## Production upgrade
-For a truly deep source-grounded assistant:
-NCERT/notes → extract → clean/chunk → embeddings → vector DB → retrieve → answer with source labels.
+Never expose the API key in GitHub frontend code.
