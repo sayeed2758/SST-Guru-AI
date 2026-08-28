@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f7f8fc">
-<title>SST GURU AI</title>
+<title>SST GURU AI — Layers 1-14</title>
 <style>
 :root{--bg:#f5f7fc;--surface:#fff;--surface2:#f8f9fd;--text:#172033;--muted:#697386;--line:#e4e7ef;--primary:#5b43ee;--primary2:#7b35ee;--good:#12b76a;--danger:#e5484d;--shadow:0 12px 35px rgba(24,32,56,.08);--radius:22px}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
@@ -24,7 +24,7 @@ body.dark{--bg:#0d1322;--surface:#141c2e;--surface2:#101827;--text:#eef2ff;--mut
     <button data-page="ask">💬 Ask SST</button><button data-page="story">📖 Story Mode</button><button data-page="word">🔎 Word Explainer</button><button data-page="difference">⚖️ Difference Maker</button><button data-page="timeline">⏳ Timeline Builder</button><button data-page="quiz">🧠 Quiz Lab</button>
   </div>
   <div class="section">TEACH</div><div class="nav">
-    <button data-page="exam">🎯 Exam Mode</button><button data-page="teacher">👨‍🏫 Teacher Studio</button><button data-page="library">📚 My SST Library</button>
+    <button data-page="exam">🎯 Exam Mode</button><button data-page="teacher">👨‍🏫 Teacher Studio</button><button data-page="library">📚 My SST Library</button><button data-page="bookmarks">⭐ Saved Answers</button>
   </div>
   <div class="side-bottom nav"><button data-action="theme">🌙 Toggle Theme</button><button data-action="export">⬇️ Export Conversation</button><button data-action="clear">🗑️ Clear Local Data</button></div>
 </aside>
@@ -36,71 +36,605 @@ body.dark{--bg:#0d1322;--surface:#141c2e;--surface2:#101827;--text:#eef2ff;--mut
 <div class="toast" id="toast"></div>
 <script>
 "use strict";
-const KB=[
-["History","Adolf Hitler",["hitler","adolf hitler","nazi","nazism","germany"],"Adolf Hitler was the leader of Nazi Germany. He became Chancellor in 1933 and established a dictatorship. Nazi ideology was racist, antisemitic and ultranationalist. His regime persecuted Jews and many other groups and was responsible for mass murder including the Holocaust. Germany invaded Poland in September 1939, leading Britain and France to declare war. Nazi Germany was defeated in 1945."],
-["History","French Revolution",["french revolution","france","1789","bastille"],"The French Revolution began in 1789 amid social inequality, privileges, financial crisis, food hardship and political conflict. The Bastille became a famous symbol of revolutionary upheaval. The monarchy was eventually overthrown and France became a republic in 1792. The Revolution passed through radical phases and had major political and social consequences."],
-["History","Industrial Revolution",["industrial revolution","industry","factory","steam","britain"],"The Industrial Revolution was a major transformation from hand production toward machine production and factories. It began in Britain in the eighteenth century and spread more widely. Textile machinery, steam power, coal, iron, transport and factory organisation were important."],
-["History","Hyksos",["hyksos","egypt","second intermediate period"],"The Hyksos were rulers who controlled parts of ancient Egypt, especially northern Egypt, during the Second Intermediate Period. Their origins and identity are complex and should not be reduced to one modern ethnic label."],
-["Geography","River",["river","tributary","source","watercourse"],"A river is a natural flowing watercourse. It usually has a source and flows along a course toward a lower area, lake, sea, ocean or another river. A tributary is a smaller river or stream that joins a larger river."],
-["Geography","Sea",["sea","salt water"],"A sea is generally a smaller division of an ocean and is often partly enclosed by land. Seas are salt-water bodies, and their boundaries can also reflect historical and geographical conventions."],
-["Geography","Ocean",["ocean","salt water"],"An ocean is a vast interconnected body of salt water. The commonly named oceans are Pacific, Atlantic, Indian, Southern and Arctic."],
-["Geography","Lake",["lake","inland water"],"A lake is a body of standing or relatively still water surrounded by land. It may be natural or artificial and may contain fresh or saline water."],
-["Geography","Weather vs Climate",["weather","climate"],"Weather describes short-term atmospheric conditions at a particular place and time. Climate describes long-term patterns and averages of weather over a region."],
-["Geography","Latitude vs Longitude",["latitude","longitude","equator","meridian"],"Latitude measures angular distance north or south of the Equator and uses parallels. Longitude measures angular distance east or west of the Prime Meridian and uses meridians."],
-["Civics","Democracy",["democracy","people","elections","government"],"Democracy is a system in which political authority is based on the people, commonly exercised directly or through elected representatives. Participation, accountability, political equality and rights are important democratic ideas."],
-["Civics","Republic",["republic","monarchy","state"],"A republic is a form of state in which public authority is exercised through public institutions and representatives rather than a hereditary monarch. A republic can also be democratic."],
-["Civics","Democracy vs Republic",["democracy republic","difference"],"Democracy mainly describes where political authority comes from: the people. Republic mainly describes a form of state in which public authority is not based on hereditary monarchy. A country can be both democratic and republican."],
-["Civics","Constitution",["constitution","rights","law"],"A constitution is the fundamental framework of rules and principles by which a state is governed. It defines institutions, powers, procedures and often rights and limits on government."],
-["Economics","Inflation",["inflation","prices","purchasing power"],"Inflation is a sustained rise in the general level of prices over time. When prices rise faster than income, the purchasing power of money falls."],
-["Economics","GDP",["gdp","production","economy"],"Gross Domestic Product measures the monetary value of final goods and services produced within an economy during a specified period."],
-["Economics","Mercantilism",["mercantilism","trade","colonialism"],"Mercantilism describes a family of early modern economic ideas and state policies emphasizing regulated trade, state power and wealth accumulation. Colonial trade and state intervention were important in several European systems."]
-];
-const KEY="sst_guru_v6";
-let state=JSON.parse(localStorage.getItem(KEY)||"null")||{page:"ask",mode:"normal",theme:"light",messages:[],docs:[]};
-document.body.className=state.theme==="dark"?"dark":"";
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-function save(){localStorage.setItem(KEY,JSON.stringify(state))}
-function toast(x){const t=$("#toast");t.textContent=x;t.classList.add("show");clearTimeout(window.tt);window.tt=setTimeout(()=>t.classList.remove("show"),1600)}
-function esc(x){return String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-function format(x){let s=esc(x);s=s.replace(/^### (.*)$/gm,"<h3>$1</h3>").replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/^\s*[-•] (.*)$/gm,"<li>$1</li>").replace(/(?:<li>.*?<\/li>\s*)+/gs,m=>"<ul>"+m+"</ul>").replace(/\n{2,}/g,"</p><p>").replace(/\n/g,"<br>");return '<div class="answer"><p>'+s+"</p></div>"}
-function search(q){let s=q.toLowerCase();return KB.map(d=>{let h=(d[1]+" "+d[0]+" "+d[2].join(" ")+" "+d[3]).toLowerCase(),score=0;if(h.includes(s))score+=30;d[2].forEach(t=>{if(s.includes(t)||t.includes(s))score+=12});s.split(/[^a-z0-9]+/).filter(Boolean).forEach(t=>{if(h.includes(t))score+=2});return{d,score}}).filter(x=>x.score).sort((a,b)=>b.score-a.score).map(x=>x.d)}
-function lastTopic(){return [...state.messages].reverse().find(x=>x.role==="user")?.text||""}
-function answer(q){
- let s=q.toLowerCase().trim();
- if(/^(ha|haan|yes|ok|okay|samjhao|ha samjhao|detail|aur|continue)\b/.test(s)&&lastTopic())q=lastTopic()+" — ab aur detail mein samjhao";
- let r=search(q),d=r[0], mode=state.mode;
- if(mode==="story")return story(d,q); if(mode==="word")return word(d,q); if(mode==="difference")return diff(q,r); if(mode==="exam")return exam(d,q); if(mode==="teacher")return teacher(d,q);
- if(!d)return "### 🧠 SST GURU AI\n\nIs exact topic ka starter entry abhi available nahi hai.\n\nAap History, Geography, Civics ya Economics ka topic pooch sakte hain. Example: **French Revolution**, **River vs Sea vs Ocean**, **Mercantilism**, **Democracy vs Republic**, **Hitler ki story**.";
- return `### 🧠 ${d[1]}\n\n**Simple explanation:** ${d[3]}\n\n**Hinglish:** ${hinglish(d)}\n\n**Memory trick:** ${memory(d)}\n\n**Next:** Isi topic ko Story, Word, Difference, Exam ya Teacher mode mein khol sakte ho.`;
+
+/* ============================================================
+   SST GURU AI — LAYERS 1–14
+   Single-file, zero-dependency build.
+   L1 UI
+   L2 Navigation
+   L3 Mode Engine
+   L4 Intent Detection
+   L5 SST Knowledge
+   L6 Context/Follow-up Memory
+   L7 Story Engine
+   L8 Word/Vocabulary Engine
+   L9 Comparison Engine
+   L10 Timeline Engine
+   L11 Exam Engine
+   L12 Teacher + Quiz Engine
+   L13 Personal Library
+   L14 Optional Live AI Backend
+   ============================================================ */
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const STORE = "sst_guru_v7";
+const SETTINGS = "sst_guru_settings_v7";
+
+const DEFAULT = {
+  page:"ask", mode:"normal", theme:"light", messages:[], docs:[],
+  bookmarks:[], prefs:{language:"Hinglish",level:"CBSE",detail:"Deep but simple"}
+};
+
+let state = JSON.parse(localStorage.getItem(STORE) || "null") || DEFAULT;
+let settings = JSON.parse(localStorage.getItem(SETTINGS) || "null") || {
+  backend:"", model:"", temperature:"0.3"
+};
+
+document.body.className = state.theme === "dark" ? "dark" : "";
+
+function save(){ localStorage.setItem(STORE, JSON.stringify(state)); }
+function saveSettings(){ localStorage.setItem(SETTINGS, JSON.stringify(settings)); }
+function esc(x){
+  return String(x ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 }
-function hinglish(d){const n=d[1];if(n==="River")return"River ko simple language mein flowing water ka natural path samjho. Ye source se nikal kar neeche ki taraf flow karti hai aur lake, sea, ocean ya another river tak pahunch sakti hai.";if(n==="Sea")return"Sea salt water ka relatively smaller part hota hai jo aksar land se partly enclosed hota hai.";if(n==="Ocean")return"Ocean bahut huge interconnected salt-water body hai.";if(n==="Democracy vs Republic")return"Democracy ka focus people ki political authority par hai; Republic ka focus hereditary monarch ke bina public state structure par hai.";return"Is concept ko definition + background + example + consequence ke chain se yaad rakho."}
-function memory(d){return d[1]==="Adolf Hitler"?"1933 → Dictatorship → 1939 War → Holocaust → 1945 defeat":d[1]==="River"?"RIVER = FLOW":d[1]==="Sea"?"SEA = OCEAN KA PART":d[1]==="Ocean"?"OCEAN = VAST SALT WATER":"Definition → Example → Consequence"}
-function story(d,q){if(!d)return "### 📖 Story Mode\n\nTopic ka naam thoda clear likho. Example: **Hitler ki story**, **French Revolution ki story**.";if(d[1]==="Adolf Hitler")return `### 📖 Hitler ki Story\n\n**Background — Germany after World War I:** Germany political aur economic crisis se guzar raha tha. Nazi Party ne resentment aur instability ka political advantage liya.\n\n**1933 — Power:** Hitler Chancellor bana aur democratic institutions ko dismantle karke dictatorship establish ki.\n\n**Nazi ideology:** Extreme nationalism, racism aur antisemitism central the. Jews aur kai other groups persecution aur mass murder ke target bane.\n\n**1939 — War:** Germany invaded Poland in September 1939. Britain and France declared war.\n\n**Holocaust:** Nazi regime aur collaborators ne European Jews ke systematic persecution aur mass murder ko carry out kiya.\n\n**1945 — End:** Nazi Germany defeated hui; Hitler died in April 1945.\n\n### 🎯 Memory Chain\n**Crisis → Nazi rise → Dictatorship → Persecution → War → Holocaust → Defeat**`;
-if(d[1]==="French Revolution")return `### 📖 French Revolution — Story\n\n**Background:** Social inequality, privileges, financial crisis aur food hardship.\n\n**1789:** Revolution begins; Bastille revolutionary upheaval ka famous symbol bana.\n\n**Political change:** Old political order challenge hua aur monarchy eventually overthrow hui.\n\n**1792:** France became a republic.\n\n**Aftermath:** Radical phase, political violence aur later Napoleon ka rise.\n\n### 🎯 Memory\n**Inequality → Crisis → Revolution → Republic → Radical phase → Napoleon**`;
-return `### 📖 ${d[1]} — Story Mode\n\n**Background:** ${d[3]}\n\n**Turning point:** Is topic ka major change identify karo.\n\n**Consequence:** Change ke baad society, politics, economy ya geography par kya effect hua?\n\n**Memory:** Background → Change → Consequence → Legacy`;}
-function word(d,q){return `### 🔎 Word Explainer\n\n**Word:** ${esc(d?d[1]:q)}\n\n**Simple English:** ${d?d[3]:"Exact starter entry nahi mila."}\n\n**Hinglish:** ${d?hinglish(d):"Meaning ko sentence aur example ke context mein samjho."}\n\n**Example:** Is word ko real classroom situation se connect karo.\n\n**Memory:** ${d?memory(d):"Meaning → Context → Example"}`;}
-function diff(q,r){if(/river.*sea.*ocean|sea.*ocean.*river/i.test(q))return `### ⚖️ River vs Sea vs Ocean\n\n| River | Sea | Ocean |\n|---|---|---|\n| Flowing watercourse | Salt-water body, generally smaller and partly enclosed | Vast interconnected salt-water body |\n| Usually has a source and course | Often connected to an ocean | Contains seas and covers huge areas |\n| Example: a river flowing to a sea | Example: Arabian Sea | Example: Indian Ocean |\n\n### 🧠 Shortcut\n**River = FLOW** • **Sea = PARTLY ENCLOSED** • **Ocean = VAST**`;
-if(r.length>=2)return `### ⚖️ Difference Maker\n\n**${r[0][1]}:** ${r[0][3]}\n\n**${r[1][1]}:** ${r[1][3]}\n\n### 🧠 Easy rule\nPehle definition compare karo, phir size/role/function, phir example.`;
-return "### ⚖️ Difference Maker\n\nDo terms ek saath likho. Example: **Democracy vs Republic** ya **Weather vs Climate**."}
-function exam(d,q){return `### 🎯 Exam Mode — ${esc(d?d[1]:q)}\n\n**Introduction:** ${d?d[3]:"Topic ki one-line definition se start karo."}\n\n**Answer structure:**\n- Meaning / definition\n- 2–3 causes or features\n- Important event/process\n- Consequences\n- Suitable example\n\n**5-mark formula:** Introduction → 4–5 clear points → example → conclusion.`}
-function teacher(d,q){return `### 👨‍🏫 Teacher Studio — ${esc(d?d[1]:q)}\n\n**Class opener:** “Is concept ko ek familiar real-life situation se connect karte hain.”\n\n**Core explanation:** ${d?d[3]:"Topic ko simple definition se start karo."}\n\n**Board flow:** Definition → Background → Example → Cause/Effect → Common confusion → Recap.\n\n**Ask students:** “Agar ye condition change ho jaye, result kya badlega?”`}
-function hero(){const c=[["📖","History Story","Hitler / French Revolution","story"],["🌊","Geography Basics","River vs Sea vs Ocean","difference"],["🔎","Hard Word","Mercantilism / difficult terms","word"],["⚖️","Compare","Democracy vs Republic","difference"],["⏳","Timeline","Build chronology","timeline"],["🧠","Quiz Lab","Practice concepts","quiz"],["🎯","Exam Mode","Exam-ready answers","exam"],["👨‍🏫","Teacher Studio","Classroom explanations","teacher"]];return `<section class="hero"><div class="kicker">YOUR PERSONAL SOCIAL SCIENCE AI</div><h1>Samajhna hai?<br><span>Story ki tarah samjho.</span></h1><p>History, Geography, Civics & Economics — simple Hinglish, deep concepts, clear examples, comparisons, timelines, quizzes and classroom tools.</p><div class="grid">${c.map(x=>`<button class="card" data-page="${x[3]}"><span class="emoji">${x[0]}</span><strong>${x[1]}</strong><small>${x[2]}</small></button>`).join("")}</div></section>`}
-function composer(){let c=[["normal","🧠 Explain"],["story","📖 Story"],["word","🔎 Word"],["difference","⚖️ Difference"],["exam","🎯 Exam"],["teacher","👨‍🏫 Teacher"]];return `<div class="composer-wrap"><div class="chips">${c.map(x=>`<button class="chip ${state.mode===x[0]?"active":""}" data-mode="${x[0]}">${x[1]}</button>`).join("")}</div><div class="composer"><button class="round" id="mic">🎙️</button><textarea id="prompt" rows="1" placeholder="Example: River vs Sea vs Ocean"></textarea><button class="round" id="read">🔊</button><button class="send" id="send">➤</button></div><div class="note">SST ONLY • Offline brain active • Live backend optional</div></div>`}
-function renderAsk(){state.page="ask";$("#pageTitle").textContent="Ask SST";$("#content").innerHTML=hero()+`<div class="chat"><div class="messages">${state.messages.length?state.messages.map((m,i)=>`<div class="msg ${m.role==="assistant"?"ai":"user"}"><div class="avatar">${m.role==="assistant"?"📚":"👨‍🏫"}</div><div class="bubble">${m.role==="assistant"?format(m.text):esc(m.text)}${m.role==="assistant"?`<div class="tools"><button class="mini" data-copy="${i}">Copy</button><button class="mini" data-simple="${i}">Make Simpler</button><button class="mini" data-say="${i}">Read Aloud</button></div>`:""}</div></div>`).join(""):`<div class="empty">👋 <strong>Namaste Sir!</strong><br>History, Geography, Civics ya Economics ka question poochho.</div>`}</div></div>${composer()}`;bind()}
-function bind(){ $$("[data-page]").forEach(b=>b.onclick=()=>{state.page=b.dataset.page;state.mode=["story","word","difference","exam","teacher"].includes(state.page)?state.page:"normal";save();render()});$$("[data-mode]").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;save();renderAsk();$("#prompt").focus()});$("#send").onclick=()=>send();$("#prompt").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};$("#prompt").oninput=e=>{e.target.style.height="auto";e.target.style.height=Math.min(150,e.target.scrollHeight)+"px"};$("#read").onclick=()=>{let a=[...state.messages].reverse().find(x=>x.role==="assistant");a?say(a.text):toast("Answer nahi hai")};$("#mic").onclick=voice;$$("[data-copy]").forEach(b=>b.onclick=()=>{navigator.clipboard?.writeText(state.messages[+b.dataset.copy].text);toast("Copied")});$$("[data-say]").forEach(b=>b.onclick=()=>say(state.messages[+b.dataset.say].text));$$("[data-simple]").forEach(b=>b.onclick=()=>{let x=state.messages[+b.dataset.simple]?.text||"";state.messages.push({role:"user",text:"Isko aur simple Hinglish mein samjhao"});state.messages.push({role:"assistant",text:"### 🧠 Simple Version\n\n"+x.replace(/[#*]/g,"").slice(0,3000)+"\n\n**Memory:** Definition → Example → Recap"});save();renderAsk()})}
-function send(){let v=$("#prompt").value.trim();if(!v)return toast("Question likho");state.messages.push({role:"user",text:v});state.messages.push({role:"assistant",text:answer(v)});save();renderAsk();setTimeout(()=>{let m=document.querySelector(".messages");m?.lastElementChild?.scrollIntoView({behavior:"smooth",block:"center"})},30)}
-function renderMode(p){let info={story:["📖","Story Mode","Background → conflict → turning point → consequence"],word:["🔎","Word Explainer","Difficult word ko English + Hinglish + example mein break karo"],difference:["⚖️","Difference Maker","Confusing concepts ka clear comparison"],exam:["🎯","Exam Mode","Exam-ready structure and keywords"],teacher:["👨‍🏫","Teacher Studio","Classroom-ready explanation"]}[p];$("#pageTitle").textContent=info[1];$("#content").innerHTML=`<div class="two"><section class="panel"><span class="badge">${info[0]} ${info[1]}</span><h2>${info[1]}</h2><p class="copy">${info[2]}</p><div class="field"><label>TOPIC / QUESTION</label><textarea class="textarea" id="modeInput" rows="5" placeholder="Type your SST topic..."></textarea></div><button class="btn primary" id="run">Generate</button> <button class="btn" id="toAsk">Open Ask SST</button></section><section class="panel"><h3>Learning flow</h3><div class="three"><div class="feature"><strong>🧠 Understand</strong><span>Simple first, depth later.</span></div><div class="feature"><strong>🗣️ Explain</strong><span>Hinglish + examples.</span></div><div class="feature"><strong>🎯 Remember</strong><span>Recap + memory.</span></div></div></section></div>`;$("#run").onclick=()=>{let q=$("#modeInput").value.trim();if(!q)return toast("Topic likho");state.messages.push({role:"user",text:q});state.messages.push({role:"assistant",text:answer(q)});state.page="ask";save();renderAsk()};$("#toAsk").onclick=()=>{state.page="ask";save();renderAsk()};bind()}
-function timeline(){let q=prompt("Timeline topic:","Hitler");if(!q)return;state.page="ask";state.mode="normal";state.messages.push({role:"user",text:"Timeline: "+q});let s=q.toLowerCase(),a=s.includes("hitler")?[["1919","Post-war Germany","Political and economic instability"],["1933","Hitler becomes Chancellor","Dictatorship established"],["1939","Poland invaded","Britain and France declare war"],["1941–45","Holocaust and total war","Mass persecution and murder"],["1945","Nazi Germany defeated","Hitler dies in April"]]:s.includes("french")?[["1789","Revolution begins","Inequality, crisis and political conflict"],["1789","Bastille","Symbol of revolutionary upheaval"],["1792","Republic","Monarchy overthrown; republic established"],["1793–94","Radical phase","Revolutionary repression"],["1799","Napoleon","Coup ends the Directory"]]:[["Background","Before","Identify conditions"],["Turning point","Main event","Identify the change"],["Aftermath","After","Record consequences"],["Legacy","Why it matters","Connect later developments"]];state.messages.push({role:"assistant",text:"### ⏳ Timeline — "+q+"\n\n"+a.map(x=>`**${x[0]} — ${x[1]}:** ${x[2]}`).join("\n\n")});save();renderAsk()}
-function quiz(){let q=prompt("Quiz topic:","Geography");if(!q)return;let pool=q.toLowerCase().includes("hitler")?[["Hitler became Chancellor in?",["1920","1933","1939","1945"],1],["Germany invaded Poland in?",["1933","1938","1939","1945"],2]]:[["A river is usually?",["Flowing watercourse","Ocean","Climate","Government"],0],["Climate means?",["Long-term weather pattern","Today's weather only","River flow","Election"],0]];let i=0,score=0;function draw(){state.page="quiz";$("#pageTitle").textContent="Quiz Lab";$("#content").innerHTML=`<section class="panel"><span class="badge">🧠 QUIZ LAB</span><h2>Question ${i+1}/${pool.length}</h2><h3>${pool[i][0]}</h3>${pool[i][1].map((o,n)=>`<button class="quizopt" data-q="${n}">${o}</button>`).join("")}<p class="copy">Score: ${score}</p></section>`;$$("[data-q]").forEach(b=>b.onclick=()=>{let n=+b.dataset.q;if(n===pool[i][2]){score++;b.classList.add("correct")}else{b.classList.add("wrong");$$("[data-q]")[pool[i][2]].classList.add("correct")}setTimeout(()=>{i++;if(i<pool.length)draw();else{alert("Quiz complete! Score: "+score+"/"+pool.length);render()}},500)})}draw()}
-function library(){state.page="library";$("#pageTitle").textContent="My SST Library";$("#content").innerHTML=`<div class="two"><section class="panel"><span class="badge">📚 PERSONAL LIBRARY</span><h2>My SST Library</h2><p class="copy">Text/Markdown/CSV files locally index karo.</p><input class="input" id="files" type="file" multiple accept=".txt,.md,.csv,.json"><br><br><button class="btn primary" id="index">Index Files</button> <button class="btn danger" id="wipe">Remove Library</button></section><section class="panel"><h3>Indexed material</h3>${state.docs.length?state.docs.map((d,i)=>`<div class="library-item"><div><strong>${esc(d.title)}</strong><small>${d.text.length} characters</small></div><button class="mini" data-del="${i}">Remove</button></div>`).join(""):"<div class='empty'>No personal files yet.</div>"}</section></div>`;$("#index").onclick=async()=>{for(const f of $("#files").files){let t=await f.text();state.docs.push({title:f.name,text:t.slice(0,100000)})}save();library();toast("Files indexed")};$("#wipe").onclick=()=>{state.docs=[];save();library()};$$("[data-del]").forEach(b=>b.onclick=()=>{state.docs.splice(+b.dataset.del,1);save();library()})}
-function settings(){let o=document.createElement("div");o.className="overlay";o.innerHTML=`<div class="modal"><div class="modalhead"><h2>⚙️ Settings</h2><button class="close">✕</button></div><div class="field"><label>AI BACKEND URL (OPTIONAL)</label><input class="input" id="api" placeholder="https://your-worker.workers.dev"></div><p class="copy">API key yahan mat rakho. Frontend offline SST brain already works.</p><button class="btn primary" id="saveSet">Save</button></div>`;document.body.appendChild(o);$(".close").onclick=()=>o.remove();$("#saveSet").onclick=()=>{localStorage.setItem("sst_backend",$("#api").value.trim());o.remove();toast("Settings saved")}}
-function voice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return toast("Voice input browser mein supported nahi");let r=new SR();r.lang="en-IN";r.onresult=e=>{$("#prompt").value=e.results[0][0].transcript;toast("Voice captured")};r.start()}
-function say(t){if(!speechSynthesis)return toast("Read Aloud supported nahi");speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t.replace(/[#*|]/g," "));u.rate=.95;speechSynthesis.speak(u)}
-function render(){document.body.className=state.theme==="dark"?"dark":"";if(state.page==="ask")renderAsk();else if(["story","word","difference","exam","teacher"].includes(state.page))renderMode(state.page);else if(state.page==="timeline"){timeline()}else if(state.page==="quiz"){quiz()}else if(state.page==="library"){library()}else renderAsk();$$("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===state.page))}
-document.addEventListener("click",e=>{let a=e.target.closest("[data-action]");if(!a)return;let x=a.dataset.action;if(x==="new"){state.messages=[];state.page="ask";state.mode="normal";save();renderAsk();toast("New conversation")};if(x==="theme"){state.theme=state.theme==="dark"?"light":"dark";save();render();toast("Theme changed")};if(x==="clear"){if(confirm("Clear all local data?")){localStorage.removeItem(KEY);location.reload()}};if(x==="export"){let txt=state.messages.map(m=>m.role.toUpperCase()+"\n"+m.text).join("\n\n---\n\n"),a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));a.download="sst-guru-conversation.txt";a.click();toast("Exported")};if(x==="settings")settings()});
+function toast(x){
+  const t=$("#toast"); if(!t)return;
+  t.textContent=x; t.classList.add("show");
+  clearTimeout(window.__toast); window.__toast=setTimeout(()=>t.classList.remove("show"),1800);
+}
+function cleanText(x){ return String(x||"").replace(/[#*`|]/g," ").replace(/\s+/g," ").trim(); }
+function format(x){
+  let s=esc(x);
+  s=s.replace(/^### (.*)$/gm,"<h3>$1</h3>");
+  s=s.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>");
+  s=s.replace(/^\s*[-•] (.*)$/gm,"<li>$1</li>");
+  s=s.replace(/(?:<li>.*?<\/li>\s*)+/gs,m=>"<ul>"+m+"</ul>");
+  s=s.replace(/\n{2,}/g,"</p><p>").replace(/\n/g,"<br>");
+  return '<div class="answer"><p>'+s+"</p></div>";
+}
+
+/* ---------------- L5: SST KNOWLEDGE ---------------- */
+const KB = [
+{subject:"History",title:"Adolf Hitler",tags:["hitler","adolf hitler","nazi","nazism","germany","world war 2","ww2","holocaust"],text:"Adolf Hitler was the leader of Nazi Germany. He became Chancellor in 1933 and established a dictatorship. Nazi ideology was racist, antisemitic and ultranationalist. The regime persecuted Jews and many other groups and carried out mass murder including the Holocaust. Germany invaded Poland in September 1939, leading Britain and France to declare war. Nazi Germany was defeated in 1945."},
+{subject:"History",title:"French Revolution",tags:["french revolution","france","1789","bastille","monarchy","republic"],text:"The French Revolution began in 1789 amid social inequality, privileges, financial crisis, food hardship and political conflict. The Bastille became a famous symbol of revolutionary upheaval. The monarchy was eventually overthrown and France became a republic in 1792. The Revolution passed through radical phases and had major political and social consequences."},
+{subject:"History",title:"Industrial Revolution",tags:["industrial revolution","industry","factory","steam","britain","machines"],text:"The Industrial Revolution was a major transformation from hand production toward machine production and factories. It began in Britain in the eighteenth century and spread more widely. Textile machinery, steam power, coal, iron, transport and factory organisation were important."},
+{subject:"History",title:"Hyksos",tags:["hyksos","egypt","second intermediate period"],text:"The Hyksos were rulers who controlled parts of ancient Egypt, especially northern Egypt, during the Second Intermediate Period. Their origins and identity are complex and should not be reduced to one modern ethnic label."},
+{subject:"History",title:"Renaissance",tags:["renaissance","humanism","europe","classical"],text:"The Renaissance was a period of cultural and intellectual change in Europe, especially from the fourteenth to sixteenth centuries. Humanism, renewed interest in classical learning, artistic experimentation and new approaches to knowledge were important."},
+{subject:"History",title:"Colonialism",tags:["colonialism","colony","imperialism","empire"],text:"Colonialism involves a state establishing control over another territory and its people, often involving political domination, economic exploitation and cultural influence. Colonial systems varied by place and period."},
+{subject:"History",title:"World War I",tags:["world war 1","ww1","first world war","1914","versailles"],text:"World War I was fought mainly from 1914 to 1918. Rival alliances, militarism, imperial competition and nationalism contributed to the crisis. The assassination of Archduke Franz Ferdinand in 1914 triggered the immediate crisis. The war ended with the defeat of the Central Powers and was followed by treaties including Versailles."},
+{subject:"History",title:"World War II",tags:["world war 2","ww2","second world war","1939","1945"],text:"World War II was fought from 1939 to 1945. In Europe, Germany's invasion of Poland in September 1939 led Britain and France to declare war. The war involved multiple theatres, mass civilian suffering, the Holocaust and the defeat of the Axis powers in 1945."},
+{subject:"History",title:"Nationalism",tags:["nationalism","nation","identity","politics"],text:"Nationalism is an idea that people sharing a sense of national identity should have political recognition or self-government. Nationalism has taken many forms and can influence movements for unification, independence or state-building."},
+{subject:"History",title:"Imperialism",tags:["imperialism","empire","colonial rule"],text:"Imperialism is the extension of a state's power or influence over other territories or peoples. It may involve political control, economic influence or military domination."},
+{subject:"Geography",title:"River",tags:["river","tributary","source","mouth","watercourse"],text:"A river is a natural flowing watercourse. It usually has a source and flows along a course toward a lower area, lake, sea, ocean or another river. A tributary is a smaller river or stream that joins a larger river."},
+{subject:"Geography",title:"Sea",tags:["sea","salt water","coast"],text:"A sea is generally a smaller division of an ocean and is often partly enclosed by land. Seas are salt-water bodies and their names and boundaries can reflect geographical and historical conventions."},
+{subject:"Geography",title:"Ocean",tags:["ocean","salt water","pacific","atlantic","indian"],text:"An ocean is a vast interconnected body of salt water. The commonly named oceans are Pacific, Atlantic, Indian, Southern and Arctic."},
+{subject:"Geography",title:"Lake",tags:["lake","inland water","freshwater"],text:"A lake is a body of standing or relatively still water surrounded by land. It may be natural or artificial and may contain fresh or saline water."},
+{subject:"Geography",title:"Weather",tags:["weather","atmosphere","temperature","rainfall"],text:"Weather describes short-term atmospheric conditions at a particular place and time, such as temperature, rainfall, wind or cloud cover."},
+{subject:"Geography",title:"Climate",tags:["climate","long term","weather pattern"],text:"Climate describes the long-term pattern and average of weather over a region, assessed over many years."},
+{subject:"Geography",title:"Weather vs Climate",tags:["weather climate","weather vs climate","difference"],text:"Weather is short-term atmospheric condition at a particular time and place. Climate is the long-term pattern and average of weather over a region."},
+{subject:"Geography",title:"Latitude",tags:["latitude","equator","parallels","north south"],text:"Latitude measures angular distance north or south of the Equator and is represented by parallels of latitude."},
+{subject:"Geography",title:"Longitude",tags:["longitude","meridian","prime meridian","east west"],text:"Longitude measures angular distance east or west of the Prime Meridian and is represented by meridians of longitude."},
+{subject:"Geography",title:"Latitude vs Longitude",tags:["latitude longitude","latitude vs longitude","coordinates"],text:"Latitude measures angular distance north or south of the Equator. Longitude measures angular distance east or west of the Prime Meridian."},
+{subject:"Geography",title:"Continent",tags:["continent","landmass"],text:"A continent is one of the large continuous or conventionally defined land areas of Earth. The common school model recognises seven continents."},
+{subject:"Geography",title:"Island vs Peninsula",tags:["island peninsula","difference","landform"],text:"An island is land completely surrounded by water. A peninsula is land surrounded by water on most sides but connected to a larger landmass."},
+{subject:"Civics",title:"Democracy",tags:["democracy","people","elections","representation","government"],text:"Democracy is a system in which political authority is based on the people, commonly exercised directly or through elected representatives. Participation, accountability, political equality and rights are important democratic ideas."},
+{subject:"Civics",title:"Republic",tags:["republic","monarchy","state","hereditary"],text:"A republic is a form of state in which public authority is exercised through public institutions and representatives rather than a hereditary monarch. A republic can also be democratic."},
+{subject:"Civics",title:"Democracy vs Republic",tags:["democracy republic","democracy vs republic","difference"],text:"Democracy mainly describes where political authority comes from: the people. Republic mainly describes a form of state in which public authority is not based on hereditary monarchy. A country can be both democratic and republican."},
+{subject:"Civics",title:"Constitution",tags:["constitution","rights","law","government"],text:"A constitution is the fundamental framework of rules and principles by which a state is governed. It defines institutions, powers, procedures and often rights and limits on government."},
+{subject:"Civics",title:"Fundamental Rights",tags:["fundamental rights","rights","india","constitution"],text:"Fundamental Rights are constitutionally protected rights in India that place important limits on state power and protect individual freedoms and equality."},
+{subject:"Civics",title:"Rule of Law",tags:["rule of law","law","equality"],text:"Rule of law means that laws govern public authority and that people and institutions are subject to law rather than arbitrary personal power."},
+{subject:"Economics",title:"Inflation",tags:["inflation","prices","purchasing power","money"],text:"Inflation is a sustained rise in the general level of prices over time. When prices rise faster than income, the purchasing power of money falls."},
+{subject:"Economics",title:"GDP",tags:["gdp","gross domestic product","production","economy"],text:"Gross Domestic Product measures the monetary value of final goods and services produced within an economy during a specified period."},
+{subject:"Economics",title:"Mercantilism",tags:["mercantilism","trade","colonialism","economic"],text:"Mercantilism describes a family of early modern economic ideas and state policies emphasising regulated trade, state power and wealth accumulation. Colonial trade and state intervention were important in several European systems."},
+{subject:"Economics",title:"Demand vs Supply",tags:["demand supply","demand vs supply","market","economics"],text:"Demand refers to the quantity of a good or service consumers are willing and able to buy at different prices. Supply refers to the quantity producers are willing and able to offer at different prices."},
+{subject:"Economics",title:"Primary Secondary Tertiary Sectors",tags:["primary sector","secondary sector","tertiary sector","sectors"],text:"The primary sector extracts or harvests natural resources, the secondary sector processes or manufactures goods, and the tertiary sector provides services."}
+];
+
+function allDocs(){ return KB.concat(state.docs.map(d=>({subject:"My Library",title:d.title,tags:[],text:d.text}))); }
+
+/* ---------------- L4: INTENT DETECTION + L6 CONTEXT ---------------- */
+function searchDocs(q){
+  const s=String(q).toLowerCase().trim();
+  const tokens=s.split(/[^a-z0-9]+/).filter(t=>t.length>1);
+  return allDocs().map(d=>{
+    const hay=(d.title+" "+d.subject+" "+(d.tags||[]).join(" ")+" "+d.text).toLowerCase();
+    let score=0;
+    if(hay.includes(s))score+=40;
+    (d.tags||[]).forEach(t=>{const z=t.toLowerCase();if(s.includes(z)||z.includes(s))score+=16});
+    tokens.forEach(t=>{if(hay.includes(t))score+=3});
+    return {d,score};
+  }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).map(x=>x.d);
+}
+function lastUser(){
+  return [...state.messages].reverse().find(m=>m.role==="user")?.text || "";
+}
+function resolveFollowup(q){
+  const s=q.toLowerCase().trim();
+  if(/^(ha|haan|yes|ok|okay|samjhao|ha samjhao|detail|aur|continue|next|explain)\b/.test(s)){
+    const prev=lastUser();
+    if(prev && prev.toLowerCase()!==s)return prev+" — ab aur detail mein samjhao";
+  }
+  return q;
+}
+function detectIntent(q){
+  const s=q.toLowerCase();
+  if(/difference|vs\.?|versus|compare|antar|farak/.test(s))return "difference";
+  if(/story|kahani|chronology|kaise hua|ki story/.test(s))return "story";
+  if(/meaning|matlab|define|definition|word|term|shabd/.test(s))return "word";
+  if(/timeline|chronological|kab|year wise/.test(s))return "timeline";
+  if(/exam|5 mark|5 marks|answer|board|question/.test(s))return "exam";
+  if(/teacher|class|students|samjhaun|padhau/.test(s))return "teacher";
+  if(/quiz|mcq|test|practice/.test(s))return "quiz";
+  return "normal";
+}
+
+/* ---------------- L7 STORY ENGINE ---------------- */
+function storyAnswer(d,q){
+ if(!d)return "### 📖 Story Mode\n\nTopic ka naam clear likho. Example: **Hitler ki story** ya **French Revolution ki story**.";
+ if(d.title==="Adolf Hitler")return `### 📖 Hitler ki Story — scene by scene
+
+**Scene 1 — Background:** World War I ke baad Germany political aur economic crisis se guzar raha tha. Is instability aur public resentment ko Nazi Party ne political support mein convert kiya.
+
+**Scene 2 — 1933:** Hitler Chancellor bana. Power consolidate karne ke baad democratic institutions ko dismantle karke dictatorship establish ki gayi.
+
+**Scene 3 — Ideology:** Nazi ideology extreme nationalism, racism aur antisemitism par based thi. Jews aur kai other groups persecution ke target bane.
+
+**Scene 4 — 1939:** Germany ne September 1939 mein Poland invade kiya. Britain aur France ne Germany ke khilaf war declare ki.
+
+**Scene 5 — Holocaust:** Nazi regime aur collaborators ne European Jews ke systematic persecution aur mass murder ko carry out kiya.
+
+**Scene 6 — 1945:** Nazi Germany defeat hui aur Hitler April 1945 mein mar gaya.
+
+### 🎯 Memory Chain
+**Post-war crisis → Nazi rise → Dictatorship → Persecution → War → Holocaust → Defeat**`;
+ if(d.title==="French Revolution")return `### 📖 French Revolution — Story
+
+**Background:** French society mein unequal privileges, financial crisis, food hardship aur political conflict tha.
+
+**1789:** Revolution begins. Bastille ka fall revolutionary upheaval ka famous symbol bana.
+
+**Political change:** Old political order challenge hua; monarchy eventually overthrow hui.
+
+**1792:** France became a republic.
+
+**Radical phase:** Revolution increasingly radical hui aur political repression/violence ka period aaya.
+
+**Aftermath:** Political instability ke baad Napoleon ka rise hua.
+
+### 🎯 Memory
+**Inequality → Crisis → Revolution → Republic → Radical phase → Napoleon**`;
+ return `### 📖 ${d.title} — Story Mode
+
+**Background:** ${d.text}
+
+**Main change:** Is topic mein jo major transformation hua, usko identify karo.
+
+**Consequence:** Is change ka society, politics, economy ya environment par kya effect hua?
+
+**Legacy:** Baad ke developments ko is topic se connect karo.
+
+### 🧠 Story Formula
+**Background → Problem/Change → Turning Point → Consequence → Legacy**`;
+}
+
+/* ---------------- L8 WORD ENGINE ---------------- */
+function wordAnswer(d,q){
+ return `### 🔎 Word Explainer
+
+**Word / Term:** ${esc(d?d.title:q)}
+
+**Simple English:** ${d?d.text:"Exact starter entry nahi mila. Term ko ek sentence/context ke saath poochho."}
+
+**Hinglish:** ${d?hinglish(d):"Meaning ko context + example ke saath samajhna best hai."}
+
+**Easy example:** Imagine classroom mein teacher is concept ko ek familiar daily-life situation se connect karta hai. Ab definition ko us example ke saath repeat karo.
+
+**Memory trick:** ${d?memory(d):"Meaning → Context → Example → Recall"}
+
+**Teacher line:** “Agar mujhe is word ko 10-second mein explain karna ho, main iska one-line meaning + ek example dunga.”`;
+}
+
+/* ---------------- L9 COMPARISON ENGINE ---------------- */
+function differenceAnswer(q,docs){
+ const s=q.toLowerCase();
+ if(/river.*sea.*ocean|river.*ocean.*sea/.test(s))return `### ⚖️ River vs Sea vs Ocean
+
+| Concept | Easy meaning | Key idea |
+|---|---|---|
+| **River** | Natural flowing watercourse | **FLOW** |
+| **Sea** | Salt-water body, generally smaller and often partly enclosed by land | **PARTLY ENCLOSED** |
+| **Ocean** | Vast interconnected salt-water body | **VAST** |
+
+**Example:** A river may flow into a sea; a sea is generally connected with an ocean.
+
+### 🧠 Super-short memory
+**River = flows**  
+**Sea = smaller/partly enclosed salt water**  
+**Ocean = huge salt-water body**`;
+ if(/weather.*climate|climate.*weather/.test(s))return `### ⚖️ Weather vs Climate
+
+**Weather:** Short-term atmospheric condition — “Aaj baarish ho rahi hai.”
+
+**Climate:** Long-term pattern — “Is region mein generally monsoon season mein heavy rainfall hoti hai.”
+
+| Point | Weather | Climate |
+|---|---|---|
+| Time | Short term | Long term |
+| Question | What is happening now? | What is the usual pattern? |
+| Example | Today's temperature | Regional average pattern |
+
+### 🧠 Memory
+**Weather = NOW** • **Climate = PATTERN**`;
+ if(/latitude.*longitude|longitude.*latitude/.test(s))return `### ⚖️ Latitude vs Longitude
+
+**Latitude:** Equator se north/south angular distance.
+
+**Longitude:** Prime Meridian se east/west angular distance.
+
+| Point | Latitude | Longitude |
+|---|---|---|
+| Reference | Equator | Prime Meridian |
+| Direction | North / South | East / West |
+| Lines | Parallels | Meridians |
+
+### 🧠 Memory
+**Latitude = flat/parallel** • **Longitude = long meridian lines**`;
+ if(/democracy.*republic|republic.*democracy/.test(s))return `### ⚖️ Democracy vs Republic
+
+**Democracy:** Political authority ka source **people** hain.
+
+**Republic:** State ka head/public authority hereditary monarchy par based nahi hota.
+
+**Important:** Democracy aur Republic opposite words nahi hain. A country **both democratic and republican** ho sakta hai.
+
+### 🧠 Memory
+**Democracy = Who gives political authority? → People**  
+**Republic = What kind of state? → Non-hereditary public state**`;
+ if(/island.*peninsula|peninsula.*island/.test(s))return `### ⚖️ Island vs Peninsula
+
+**Island:** Completely surrounded by water.
+
+**Peninsula:** Most sides se water, but larger landmass se connected.
+
+### 🧠 Memory
+**Island = water all around**  
+**Peninsula = water around most sides + land connection**`;
+ if(docs.length>=2)return `### ⚖️ Clear Difference
+
+**${docs[0].title}:** ${docs[0].text}
+
+**${docs[1].title}:** ${docs[1].text}
+
+### Compare like a teacher
+1. Definition
+2. Main feature
+3. Difference in role/function
+4. Example
+5. One-line memory trick`;
+ return "### ⚖️ Difference Maker\n\nDono ya teen concepts ek saath likho. Example: **River vs Sea vs Ocean**, **Democracy vs Republic**, **Weather vs Climate**.";
+}
+
+/* ---------------- L10 TIMELINE ENGINE ---------------- */
+function timelineData(q){
+ const s=q.toLowerCase();
+ if(s.includes("hitler")||s.includes("nazi"))return [
+ ["1919","Post-war Germany","Political and economic instability after World War I."],
+ ["1920s","Nazi Party grows","Economic/political crisis and resentment help Nazi support expand."],
+ ["1933","Hitler becomes Chancellor","Dictatorship is established through rapid concentration of power."],
+ ["1939","Poland invaded","Britain and France declare war; European war begins."],
+ ["1941–45","Holocaust and total war","Systematic persecution and mass murder occur amid wider war."],
+ ["1945","Defeat of Nazi Germany","European war ends; Hitler dies in April."]
+ ];
+ if(s.includes("french"))return [
+ ["1789","Revolution begins","Inequality, financial crisis, food hardship and political conflict."],
+ ["1789","Bastille","Famous symbol of revolutionary upheaval."],
+ ["1791","Constitutional phase","France adopts a constitutional framework."],
+ ["1792","Republic","Monarchy is overthrown and France becomes a republic."],
+ ["1793–94","Radical phase","Revolutionary repression and political violence."],
+ ["1799","Napoleon","Coup ends the Directory and Napoleon rises."]
+ ];
+ if(s.includes("industrial"))return [
+ ["18th century","Early industrial change","Mechanisation expands in Britain."],
+ ["1760s–70s","Textile innovation","Spinning and weaving are transformed."],
+ ["Late 18th century","Steam power","Steam power becomes increasingly important."],
+ ["19th century","Factory & urban growth","Industrialisation spreads and cities expand."]
+ ];
+ if(s.includes("world war 1")||s.includes("ww1"))return [
+ ["1914","Immediate crisis","Assassination of Archduke Franz Ferdinand triggers the crisis."],
+ ["1914–16","Trench warfare","Major battles and stalemate in Europe."],
+ ["1917","Russian Revolution","Russia undergoes revolution and later exits the war."],
+ ["1918","Armistice","Central Powers are defeated; fighting ends."],
+ ["1919","Treaty of Versailles","Post-war settlement places major obligations on Germany."]
+ ];
+ return [
+ ["Background","Before","Identify the conditions before the main event."],
+ ["Turning point","Main event","Identify the moment that changes the situation."],
+ ["Aftermath","After","Record immediate consequences."],
+ ["Legacy","Long term","Connect the topic to later developments."]
+ ];
+}
+function timelineAnswer(q){
+ return "### ⏳ Timeline — "+q+"\n\n"+timelineData(q).map(x=>`**${x[0]} — ${x[1]}:** ${x[2]}`).join("\n\n")+
+ "\n\n### 🧠 Revision rule\nRead the timeline twice, then close it and recall the chain aloud.";
+}
+
+/* ---------------- L11 EXAM ENGINE ---------------- */
+function examAnswer(d,q){
+ return `### 🎯 Exam Mode — ${esc(d?d.title:q)}
+
+**1. Introduction**
+${d?d.text:"Start with a one-line definition/introduction."}
+
+**2. Write in points**
+- Background / meaning
+- Important causes or features
+- Main event / process
+- Consequences
+- One suitable example
+
+**3. 5-mark answer formula**
+**Introduction → 4–5 explained points → example → conclusion**
+
+**4. Common mistake**
+Sirf dates ya definitions ki list mat banao. **Cause → event/process → consequence** ka connection explain karo.
+
+**5. Quick revision**
+Before writing, remember: **What? Why? How? Result?**`;
+}
+
+/* ---------------- L12 TEACHER + QUIZ ---------------- */
+function teacherAnswer(d,q){
+ return `### 👨‍🏫 Teacher Studio — ${esc(d?d.title:q)}
+
+**Class opener:** “Aaj is concept ko ek familiar real-life situation se connect karte hain.”
+
+**Core explanation:** ${d?d.text:"Topic ko simple definition se start karo."}
+
+**Board plan**
+1. Definition
+2. Background
+3. Example / analogy
+4. Cause → effect
+5. Common confusion
+6. 20-second recap
+
+**Ask students:** “Agar ye condition change ho jaye, result kya badlega?”
+
+**Exit question:** “Is concept ko apne words mein ek sentence mein explain karo.”
+
+**Teacher memory:** **Definition → Example → Why → Result → Recall**`;
+}
+function quizQuestions(topic){
+ const s=topic.toLowerCase();
+ if(s.includes("hitler")||s.includes("nazi"))return [
+ ["Hitler became Chancellor of Germany in?",["1920","1933","1939","1945"],1],
+ ["Germany invaded Poland in?",["1933","1938","1939","1945"],2],
+ ["The Holocaust refers to?",["Systematic persecution and mass murder of European Jews under Nazi rule and collaborators","A trade policy","A river system","A constitutional amendment"],0],
+ ["Nazi Germany was defeated in?",["1939","1942","1945","1950"],2]
+ ];
+ if(s.includes("french")||s.includes("revolution"))return [
+ ["French Revolution began in?",["1776","1789","1815","1914"],1],
+ ["One major underlying cause was?",["Social inequality and financial crisis","Internet","Space travel","Robots"],0],
+ ["France became a republic in?",["1789","1791","1792","1799"],2],
+ ["Bastille became a symbol of?",["Revolutionary upheaval","Monsoon","Railway","Agriculture"],0]
+ ];
+ if(s.includes("democracy")||s.includes("republic"))return [
+ ["Democracy mainly concerns political authority of?",["People","Hereditary ruler only","One company","Military only"],0],
+ ["Can a republic also be democratic?",["Yes","No","Never","Only in ancient times"],0],
+ ["Republic mainly refers to a state without?",["Hereditary monarchy","Any laws","Citizens","Institutions"],0],
+ ["Democracy and republic are always identical?",["No, they describe different but compatible ideas","Yes","Only in Europe","Only in India"],0]
+ ];
+ return [
+ ["A river is usually?",["A flowing watercourse","A standing salt-water body","An atmosphere","A government"],0],
+ ["A sea is generally?",["A salt-water body often partly enclosed by land","A river source","A desert","A political party"],0],
+ ["Climate means?",["Long-term pattern of weather","Today's weather only","A river","An election"],0],
+ ["Latitude is measured from?",["Equator","Prime Meridian","Tropic of Cancer only","Poles only"],0]
+ ];
+}
+function renderQuiz(){
+ $("#pageTitle").textContent="Quiz Lab";
+ $("#content").innerHTML=`<section class="panel"><span class="badge">🧠 QUIZ LAB</span><h2>Concept Practice</h2><p class="copy">Topic do aur instant MCQs practice karo. Har answer ke baad explanation milega.</p><div class="field"><label>TOPIC</label><input class="input" id="quizTopic" placeholder="Hitler / French Revolution / Geography"></div><button class="btn primary" id="quizStart">Start Quiz</button><div id="quizArea"></div></section>`;
+ $("#quizStart").onclick=()=>{
+   const topic=$("#quizTopic").value.trim()||"Geography"; let qs=quizQuestions(topic),i=0,score=0;
+   function draw(){
+    if(i>=qs.length){$("#quizArea").innerHTML=`<div class="feature"><h3>🎉 Quiz Complete</h3><p>Your score: <strong>${score}/${qs.length}</strong></p><button class="btn primary" id="quizAgain">Try Again</button></div>`;$("#quizAgain").onclick=()=>$("#quizStart").click();return;}
+    const q=qs[i];$("#quizArea").innerHTML=`<div class="feature"><span class="badge">Question ${i+1}/${qs.length}</span><h3>${esc(q[0])}</h3>${q[1].map((o,n)=>`<button class="quizopt" data-q="${n}">${esc(o)}</button>`).join("")}<p class="copy">Score: ${score}</p></div>`;
+    $$(".quizopt").forEach(b=>b.onclick=()=>{const n=+b.dataset.q;$$(".quizopt").forEach(x=>x.disabled=true);if(n===q[2]){score++;b.classList.add("correct");$("#quizArea .copy").textContent="✅ Correct";}else{b.classList.add("wrong");$$(".quizopt")[q[2]].classList.add("correct");$("#quizArea .copy").textContent="❌ Correct answer highlighted";}setTimeout(()=>{i++;draw()},650)});
+   }
+   draw();
+ };
+}
+
+/* ---------------- L13 PERSONAL LIBRARY ---------------- */
+function renderLibrary(){
+ $("#pageTitle").textContent="My SST Library";
+ $("#content").innerHTML=`<div class="two"><section class="panel"><span class="badge">📚 PERSONAL LIBRARY</span><h2>My SST Library</h2><p class="copy">TXT, MD, CSV and JSON text can be indexed locally. Your files stay in this browser.</p><input class="input" id="files" type="file" multiple accept=".txt,.md,.csv,.json"><br><br><button class="btn primary" id="indexFiles">Index Files</button> <button class="btn danger" id="wipeLibrary">Remove Library</button></section><section class="panel"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Indexed material</h3><span class="badge">${state.docs.length} files</span></div>${state.docs.length?state.docs.map((d,i)=>`<div class="library-item"><div><strong>${esc(d.title)}</strong><small>${d.text.length} characters • local</small></div><button class="mini" data-del="${i}">Remove</button></div>`).join(""):"<div class='empty'>No personal material yet.</div>"}</section></div>`;
+ $("#indexFiles").onclick=async()=>{const fs=$("#files").files;if(!fs.length)return toast("File select karo");for(const f of fs){const t=await f.text();if(t.trim())state.docs.push({title:f.name,text:t.slice(0,150000)})}save();renderLibrary();toast("Files indexed")};
+ $("#wipeLibrary").onclick=()=>{state.docs=[];save();renderLibrary();toast("Library removed")};
+ $$("[data-del]").forEach(b=>b.onclick=()=>{state.docs.splice(+b.dataset.del,1);save();renderLibrary();toast("Removed")});
+}
+
+/* ---------------- L14 OPTIONAL LIVE AI ---------------- */
+async function liveAI(q){
+ if(!settings.backend)return null;
+ try{
+   const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),9000);
+   const payload={message:q,mode:state.mode,history:state.messages.slice(-12),context:searchDocs(q).slice(0,8),preferences:state.prefs};
+   const r=await fetch(settings.backend.replace(/\/$/,"")+"/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),signal:ctrl.signal});
+   clearTimeout(timer);
+   const d=await r.json();
+   if(r.ok&&d.answer)return d.answer;
+ }catch(e){}
+ return null;
+}
+
+/* ---------------- CORE ANSWER ROUTER ---------------- */
+function offlineAnswer(raw){
+ const q=resolveFollowup(raw);
+ const intent=state.mode!=="normal"?state.mode:detectIntent(q);
+ const docs=searchDocs(q);
+ const d=docs[0];
+ if(intent==="story")return storyAnswer(d,q);
+ if(intent==="word")return wordAnswer(d,q);
+ if(intent==="difference")return differenceAnswer(q,docs);
+ if(intent==="timeline")return timelineAnswer(q);
+ if(intent==="exam")return examAnswer(d,q);
+ if(intent==="teacher")return teacherAnswer(d,q);
+ if(intent==="quiz")return "Quiz mode kholo aur topic enter karo.";
+ if(!d)return `### 🧠 SST GURU AI
+
+Is exact topic ka starter entry nahi mila.
+
+Main **SST only** hoon: History, Geography, Civics aur Economics.
+
+Try:
+- **Hitler ki story**
+- **French Revolution**
+- **River vs Sea vs Ocean**
+- **Weather vs Climate**
+- **Democracy vs Republic**
+- **Mercantilism ka meaning**
+- **Latitude vs Longitude**
+
+Agar tumhare paas NCERT/notes hain, **My SST Library** mein upload karke unhe local knowledge mein add kar sakte ho.`;
+ return `### 🧠 ${d.title}
+
+**Simple explanation:** ${d.text}
+
+**Hinglish:** ${hinglish(d)}
+
+**Memory trick:** ${memory(d)}
+
+**Deep connection:** Is concept ko samajhne ke liye pehle **definition**, phir **background**, phir **example**, aur last mein **consequence** dekho.
+
+**Next:** Isi topic ko Story, Word, Difference, Timeline, Exam ya Teacher mode mein continue kar sakte ho.`;
+}
+function hinglish(d){
+ const n=d.title;
+ if(n==="River")return"River ko flowing water ka natural path samjho. Source se nikalti hai aur lower area, lake, sea, ocean ya another river ki taraf flow karti hai.";
+ if(n==="Sea")return"Sea salt water ka comparatively smaller body hota hai jo aksar land se partly enclosed hota hai.";
+ if(n==="Ocean")return"Ocean bahut huge interconnected salt-water body hota hai.";
+ if(n==="Democracy vs Republic")return"Democracy mein political authority ka source people hain; Republic mein public state hereditary monarch par based nahi hota.";
+ return"Is concept ko simple definition + familiar example + cause/effect connection ke saath yaad karo.";
+}
+function memory(d){
+ if(d.title==="Adolf Hitler")return"1933 → Dictatorship → 1939 War → Holocaust → 1945 Defeat";
+ if(d.title==="River")return"RIVER = FLOW";
+ if(d.title==="Sea")return"SEA = PARTLY ENCLOSED";
+ if(d.title==="Ocean")return"OCEAN = VAST";
+ if(d.title==="Weather")return"WEATHER = NOW";
+ if(d.title==="Climate")return"CLIMATE = LONG-TERM PATTERN";
+ return"Definition → Example → Why → Result";
+}
+
+/* ---------------- UI ---------------- */
+function hero(){
+ const cards=[
+ ["📖","History Story","Hitler / French Revolution","story"],
+ ["🌊","Geography Basics","River vs Sea vs Ocean","difference"],
+ ["🔎","Hard Word","Mercantilism / difficult terms","word"],
+ ["⚖️","Compare","Democracy vs Republic","difference"],
+ ["⏳","Timeline","Build chronology","timeline"],
+ ["🧠","Quiz Lab","Practice concepts","quiz"],
+ ["🎯","Exam Mode","Exam-ready answers","exam"],
+ ["👨‍🏫","Teacher Studio","Classroom explanations","teacher"]
+ ];
+ return `<section class="hero"><div class="kicker">YOUR PERSONAL SOCIAL SCIENCE AI</div><h1>Samajhna hai?<br><span>Story ki tarah samjho.</span></h1><p>History, Geography, Civics & Economics — simple Hinglish, deep concepts, examples, comparisons, timelines, quizzes and teacher tools.</p><div class="grid">${cards.map(c=>`<button class="card" data-page="${c[3]}"><span class="emoji">${c[0]}</span><strong>${c[1]}</strong><small>${c[2]}</small></button>`).join("")}</div></section>`;
+}
+function composer(){
+ const c=[["normal","🧠 Explain"],["story","📖 Story"],["word","🔎 Word"],["difference","⚖️ Difference"],["exam","🎯 Exam"],["teacher","👨‍🏫 Teacher"]];
+ return `<div class="composer-wrap"><div class="chips">${c.map(x=>`<button class="chip ${state.mode===x[0]?"active":""}" data-mode="${x[0]}">${x[1]}</button>`).join("")}</div><div class="composer"><button class="round" id="mic">🎙️</button><textarea id="prompt" rows="1" placeholder="Example: River vs Sea vs Ocean"></textarea><button class="round" id="read">🔊</button><button class="send" id="send">➤</button></div><div class="note">SST ONLY • Layer 1–14 active • Offline brain active • Live backend optional</div></div>`;
+}
+function renderAsk(){
+ state.page="ask";$("#pageTitle").textContent="Ask SST";
+ $("#content").innerHTML=hero()+`<div class="chat"><div class="messages">${state.messages.length?state.messages.map((m,i)=>`<div class="msg ${m.role==="assistant"?"ai":"user"}"><div class="avatar">${m.role==="assistant"?"📚":"👨‍🏫"}</div><div class="bubble">${m.role==="assistant"?format(m.text):esc(m.text)}${m.role==="assistant"?`<div class="tools"><button class="mini" data-copy="${i}">Copy</button><button class="mini" data-simple="${i}">Make Simpler</button><button class="mini" data-say="${i}">Read Aloud</button><button class="mini" data-bookmark="${i}">⭐ Save</button></div>`:""}</div></div>`).join(""):`<div class="empty">👋 <strong>Namaste Sir!</strong><br>History, Geography, Civics ya Economics ka question poochho.</div>`}</div></div>${composer()}`;
+ bindAsk();
+}
+function bindAsk(){
+ $$(".chip").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;save();renderAsk();$("#prompt")?.focus()});
+ $("#send").onclick=()=>send();
+ $("#prompt").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};
+ $("#prompt").oninput=e=>{e.target.style.height="auto";e.target.style.height=Math.min(150,e.target.scrollHeight)+"px"};
+ $("#mic").onclick=voice;
+ $("#read").onclick=()=>{const a=[...state.messages].reverse().find(x=>x.role==="assistant");a?say(a.text):toast("Answer nahi hai")};
+ $$("[data-copy]").forEach(b=>b.onclick=()=>{navigator.clipboard?.writeText(state.messages[+b.dataset.copy].text);toast("Copied")});
+ $$("[data-say]").forEach(b=>b.onclick=()=>say(state.messages[+b.dataset.say].text));
+ $$("[data-simple]").forEach(b=>b.onclick=()=>{const x=state.messages[+b.dataset.simple]?.text||"";state.messages.push({role:"user",text:"Isko aur simple Hinglish mein samjhao"});state.messages.push({role:"assistant",text:"### 🧠 Beginner Version\n\n"+cleanText(x).slice(0,3500)+"\n\n**Memory:** Definition → Example → Recap"});save();renderAsk()});
+ $$("[data-bookmark]").forEach(b=>b.onclick=()=>{const x=state.messages[+b.dataset.bookmark]?.text||"";state.bookmarks.push({text:x,date:new Date().toLocaleString()});save();toast("Saved to memory")});
+}
+async function send(){
+ const input=$("#prompt"),v=input.value.trim();if(!v)return toast("Question likho");
+ state.messages.push({role:"user",text:v});input.value="";input.style.height="auto";save();renderAsk();
+ const live=await liveAI(v);
+ const ans=live||offlineAnswer(v);
+ state.messages.push({role:"assistant",text:ans});save();renderAsk();
+ setTimeout(()=>document.querySelector(".messages")?.lastElementChild?.scrollIntoView({behavior:"smooth",block:"center"}),30);
+}
+function renderMode(p){
+ const info={story:["📖","Story Mode","Background → conflict → turning point → consequence"],word:["🔎","Word Explainer","Difficult word ko English + Hinglish + example mein break karo"],difference:["⚖️","Difference Maker","Confusing concepts ka clear comparison"],exam:["🎯","Exam Mode","Exam-ready structure and keywords"],teacher:["👨‍🏫","Teacher Studio","Classroom-ready explanation"]}[p];
+ $("#pageTitle").textContent=info[1];
+ $("#content").innerHTML=`<div class="two"><section class="panel"><span class="badge">${info[0]} ${info[1]}</span><h2>${info[1]}</h2><p class="copy">${info[2]}</p><div class="field"><label>TOPIC / QUESTION</label><textarea class="textarea" id="modeInput" rows="5" placeholder="Type your SST topic..."></textarea></div><button class="btn primary" id="runMode">Generate</button> <button class="btn" id="askMode">Open Ask SST</button></section><section class="panel"><h3>Learning flow</h3><div class="three"><div class="feature"><strong>🧠 Understand</strong><span>Simple first, depth later.</span></div><div class="feature"><strong>🗣️ Explain</strong><span>Hinglish + examples.</span></div><div class="feature"><strong>🎯 Remember</strong><span>Recap + memory.</span></div></div></section></div>`;
+ $("#runMode").onclick=()=>{const q=$("#modeInput").value.trim();if(!q)return toast("Topic likho");state.mode=p;state.messages.push({role:"user",text:q});state.messages.push({role:"assistant",text:offlineAnswer(q)});state.page="ask";save();renderAsk()};
+ $("#askMode").onclick=()=>{state.page="ask";state.mode=p;save();renderAsk()};
+}
+function renderTimeline(){
+ $("#pageTitle").textContent="Timeline Builder";
+ $("#content").innerHTML=`<section class="panel"><span class="badge">⏳ TIMELINE</span><h2>Timeline Builder</h2><p class="copy">Historical events ko chronology mein arrange karo.</p><div class="field"><label>TOPIC</label><input class="input" id="tlTopic" placeholder="Hitler / French Revolution / Industrial Revolution"></div><button class="btn primary" id="tlRun">Build Timeline</button><div id="tlOut"></div></section>`;
+ $("#tlRun").onclick=()=>{const q=$("#tlTopic").value.trim();if(!q)return toast("Topic likho");$("#tlOut").innerHTML=`<div class="timeline">${timelineData(q).map(x=>`<div class="t"><div class="year">${x[0]}</div><div class="tbox"><strong>${x[1]}</strong><span>${x[2]}</span></div></div>`).join("")}</div>`};
+}
+function renderBookmarks(){
+ $("#pageTitle").textContent="Saved Answers";
+ $("#content").innerHTML=`<section class="panel"><span class="badge">⭐ SAVED</span><h2>My Saved Answers</h2>${state.bookmarks.length?state.bookmarks.map((b,i)=>`<div class="feature" style="margin-top:10px"><small>${esc(b.date)}</small><p>${esc(cleanText(b.text).slice(0,900))}</p><button class="mini" data-unmark="${i}">Remove</button></div>`).join(""):`<div class="empty">Abhi kuch save nahi kiya.</div>`}</section>`;
+ $$("[data-unmark]").forEach(b=>b.onclick=()=>{state.bookmarks.splice(+b.dataset.unmark,1);save();renderBookmarks()});
+}
+function settingsModal(){
+ const o=document.createElement("div");o.className="overlay";
+ o.innerHTML=`<div class="modal"><div class="modalhead"><h2>⚙️ Settings</h2><button class="close">✕</button></div>
+ <div class="field"><label>LIVE AI BACKEND URL (OPTIONAL)</label><input class="input" id="backendUrl" value="${esc(settings.backend)}" placeholder="https://your-worker.workers.dev"></div>
+ <div class="two"><div class="field"><label>LANGUAGE</label><select class="select" id="lang"><option>Hinglish</option><option>English</option><option>Hindi</option></select></div><div class="field"><label>DETAIL</label><select class="select" id="detail"><option>Deep but simple</option><option>Balanced</option><option>Very detailed</option></select></div></div>
+ <div class="field"><label>TEACHING LEVEL</label><input class="input" id="level" value="${esc(state.prefs.level)}"></div>
+ <p class="copy">API key frontend mein mat rakho. Sirf deployed Worker URL yahan rakho. Backend fail ho to offline SST brain automatically answer karega.</p>
+ <button class="btn primary" id="saveSettings">Save Settings</button></div>`;
+ document.body.appendChild(o);$("#lang").value=state.prefs.language;$("#detail").value=state.prefs.detail;
+ $(".close").onclick=()=>o.remove();
+ $("#saveSettings").onclick=()=>{settings.backend=$("#backendUrl").value.trim();state.prefs.language=$("#lang").value;state.prefs.detail=$("#detail").value;state.prefs.level=$("#level").value||"CBSE";save();saveSettings();o.remove();toast("Settings saved")};
+}
+function voice(){
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return toast("Voice input supported nahi hai");
+ const r=new SR();r.lang="en-IN";r.onresult=e=>{$("#prompt").value=e.results[0][0].transcript;toast("Voice captured")};r.onerror=()=>toast("Voice input failed");r.start();
+}
+function say(t){if(!("speechSynthesis"in window))return toast("Read Aloud supported nahi");speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(cleanText(t));u.rate=.95;speechSynthesis.speak(u)}
+function exportChat(){
+ const txt=state.messages.map(m=>m.role.toUpperCase()+"\n"+m.text).join("\n\n---\n\n");
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));a.download="sst-guru-conversation.txt";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast("Conversation exported");
+}
+function render(){
+ document.body.className=state.theme==="dark"?"dark":"";
+ if(state.page==="ask")renderAsk();
+ else if(["story","word","difference","exam","teacher"].includes(state.page))renderMode(state.page);
+ else if(state.page==="timeline")renderTimeline();
+ else if(state.page==="quiz")renderQuiz();
+ else if(state.page==="library")renderLibrary();
+ else if(state.page==="bookmarks")renderBookmarks();
+ else renderAsk();
+ $$(".nav button[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===state.page));
+}
+document.addEventListener("click",e=>{
+ const nav=e.target.closest("[data-page]");
+ if(nav){state.page=nav.dataset.page;state.mode=["story","word","difference","exam","teacher"].includes(state.page)?state.page:"normal";save();$("#sidebar")?.classList.remove("open");render();return}
+ const a=e.target.closest("[data-action]");if(!a)return;
+ const x=a.dataset.action;
+ if(x==="new"){state.messages=[];state.page="ask";state.mode="normal";save();render();toast("New conversation")}
+ if(x==="theme"){state.theme=state.theme==="dark"?"light":"dark";save();render();toast("Theme changed")}
+ if(x==="clear"){if(confirm("Clear all local chats, library and saved answers?")){localStorage.removeItem(STORE);location.reload()}}
+ if(x==="export")exportChat();
+ if(x==="settings")settingsModal();
+});
 $("#menu").onclick=()=>$("#sidebar").classList.toggle("open");
-window.addEventListener("error",e=>{if(!$("#content"))return;$("#content").innerHTML=`<section class="panel"><h2>⚠️ SST GURU recovered</h2><p class="copy">A temporary browser error occurred. Refresh once. Your saved chats are safe.</p><button class="btn primary" onclick="location.reload()">Refresh</button></section>`});
+window.addEventListener("error",()=>{if($("#content")&&!$("#content").children.length)$("#content").innerHTML=`<section class="panel"><h2>⚠️ SST GURU recovered</h2><p class="copy">Temporary browser error. Refresh once.</p><button class="btn primary" onclick="location.reload()">Refresh</button></section>`});
 render();
+
 </script>
 </body>
 </html>
