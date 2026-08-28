@@ -459,12 +459,31 @@ function renderLibrary(){
 async function liveAI(q){
  if(!settings.backend)return null;
  try{
-   const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),9000);
-   const payload={message:q,mode:state.mode,history:state.messages.slice(-12),context:searchDocs(q).slice(0,8),preferences:state.prefs};
-   const r=await fetch(settings.backend.replace(/\/$/,"")+"/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),signal:ctrl.signal});
+   const ctrl=new AbortController();
+   const timer=setTimeout(()=>ctrl.abort(),30000);
+   const context=searchDocs(q).slice(0,10).map(d=>({
+     subject:d.subject,title:d.title,text:d.text
+   }));
+   const payload={
+     message:q,
+     mode:state.mode,
+     history:state.messages.slice(-16),
+     context,
+     preferences:state.prefs,
+     previousInteractionId:localStorage.getItem("sst_guru_ai_interaction")||""
+   };
+   const r=await fetch(settings.backend.replace(/\/$/,"")+"/chat",{
+     method:"POST",
+     headers:{"Content-Type":"application/json"},
+     body:JSON.stringify(payload),
+     signal:ctrl.signal
+   });
    clearTimeout(timer);
    const d=await r.json();
-   if(r.ok&&d.answer)return d.answer;
+   if(r.ok&&d.answer){
+     if(d.interactionId)localStorage.setItem("sst_guru_ai_interaction",d.interactionId);
+     return d.answer;
+   }
  }catch(e){}
  return null;
 }
@@ -594,7 +613,7 @@ function settingsModal(){
  <div class="field"><label>LIVE AI BACKEND URL (OPTIONAL)</label><input class="input" id="backendUrl" value="${esc(settings.backend)}" placeholder="https://your-worker.workers.dev"></div>
  <div class="two"><div class="field"><label>LANGUAGE</label><select class="select" id="lang"><option>Hinglish</option><option>English</option><option>Hindi</option></select></div><div class="field"><label>DETAIL</label><select class="select" id="detail"><option>Deep but simple</option><option>Balanced</option><option>Very detailed</option></select></div></div>
  <div class="field"><label>TEACHING LEVEL</label><input class="input" id="level" value="${esc(state.prefs.level)}"></div>
- <p class="copy">API key frontend mein mat rakho. Sirf deployed Worker URL yahan rakho. Backend fail ho to offline SST brain automatically answer karega.</p>
+ <p class="copy">API key frontend mein mat rakho. Sirf deployed Worker URL yahan rakho. Live mode mein broad SST AI answers milenge; backend unavailable ho to offline SST brain automatically fallback karega.</p>
  <button class="btn primary" id="saveSettings">Save Settings</button></div>`;
  document.body.appendChild(o);$("#lang").value=state.prefs.language;$("#detail").value=state.prefs.detail;
  $(".close").onclick=()=>o.remove();
