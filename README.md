@@ -1,52 +1,47 @@
-# 📚 SST GURU AI
+# 📚 SST GURU AI v3 — Layers 1–14
 
-A personalized Social Science AI assistant designed for an SST teacher.
+This is a substantial working starter build designed for an SST teacher.
 
-## Included
-- Premium responsive web UI
-- SST-only system behavior
-- Ask SST chat
-- Story Mode
-- Difficult Word Explainer
-- Difference Maker
-- Exam Mode
-- Teacher Mode
-- Local conversation history
-- Light/Dark theme
-- Built-in starter knowledge retrieval
-- Secure backend architecture
-- Cloudflare Worker backend
-- Mobile responsive design
+## Layer coverage
+
+1. Premium responsive UI/UX
+2. Dedicated learning modes
+3. Conversation engine
+4. Local personal preferences
+5. Local conversation history + export
+6. AI backend connector
+7. SST-only rules/prompt
+8. Starter SST knowledge base
+9. Retrieval layer (browser-side starter RAG)
+10. Accuracy-oriented backend instructions
+11. Explanation engine / modes
+12. Timeline + visual learning foundation
+13. Quiz + Teacher Studio + Exam tools
+14. Personal SST Library with local indexing
+
+## Buttons already wired
+- Ask SST
+- Story / Word / Difference / Exam / Teacher modes
+- New Conversation
+- Theme
+- Clear Local Data
+- Export Chat
+- Voice input
+- Read aloud
+- Copy
+- Make Simpler
+- Timeline Builder
+- Quiz Lab
+- Library upload/index/remove
+- Settings
 
 ## Important
-The project is complete as a working starter architecture, but the AI provider is not connected until you deploy the backend and add your API key.
+The local SST demo brain works for built-in topics and provides structured fallback responses for other SST questions.
+For true deep open-ended AI, deploy `backend/worker.js`, add `OPENAI_API_KEY` to the Worker, and paste the Worker URL in Settings.
 
-### Quick start
-1. Upload the project to a GitHub repository.
-2. Deploy `backend/worker.js` as a Cloudflare Worker.
-3. Add your provider API key to the Worker secret `OPENAI_API_KEY`.
-4. Copy the Worker URL.
-5. Edit `assets/js/config.js` and paste the URL into `API_URL`.
-6. Enable GitHub Pages for the repository.
-7. Open the GitHub Pages URL.
+## GitHub Pages
+Upload the project files to the root of a GitHub repository and enable GitHub Pages from the repository's Pages settings.
 
-## Suggested next upgrade
-For a truly deep SST knowledge system, replace the starter knowledge array with a RAG pipeline using your NCERT PDFs, notes, glossaries and chapter material. Keep source metadata so the AI can say where a fact came from.
-
-## Project structure
-sst-guru-ai/
-├── index.html
-├── assets/
-│   ├── css/
-│   │   ├── style.css
-│   │   └── chat.css
-│   └── js/
-│       ├── app.js
-│       ├── config.js
-│       └── knowledge.js
-├── backend/
-│   ├── worker.js
-│   └── README.md
-├── data/
-│   └── README.md
-└── README.md
+## Production upgrade
+For a truly deep source-grounded assistant:
+NCERT/notes → extract → clean/chunk → embeddings → vector DB → retrieve → answer with source labels.
