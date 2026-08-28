@@ -1,25 +1,15 @@
-/*
-  Small built-in starter knowledge layer.
-  Add your own NCERT-aligned entries to this array later.
-  The AI receives the best matching entries as context.
-*/
-window.SST_KNOWLEDGE = [
- {id:"river",tags:["river","geography","water"],title:"River basics",text:"A river is a natural flowing watercourse, usually moving from higher land toward a lower area, lake, sea or another river. A river has a source and a course; tributaries may join it."},
- {id:"sea-ocean",tags:["sea","ocean","geography","water"],title:"Sea vs Ocean",text:"An ocean is a very large continuous body of salt water. A sea is generally a smaller part of an ocean, often partly enclosed by land. The terms are not simply based on size in every case, but this is a useful beginner distinction."},
- {id:"french-revolution",tags:["french revolution","history","france","1789"],title:"French Revolution overview",text:"The French Revolution began in 1789 amid social inequality, financial crisis, political tensions and resentment toward privileges. The Revolution transformed French politics and society and eventually led to the abolition of the monarchy and establishment of a republic."},
- {id:"mercantilism",tags:["mercantilism","history","economics"],title:"Mercantilism",text:"Mercantilism refers to an early modern economic system and set of policies associated with European states, emphasizing state power, trade regulation, accumulation of wealth and favorable trade balances. Colonial trade was an important part of many mercantilist systems."},
- {id:"democracy-republic",tags:["democracy","republic","civics","difference"],title:"Democracy vs Republic",text:"Democracy broadly concerns rule by the people, directly or through representatives. A republic is a state in which political authority is exercised through public institutions and representatives rather than hereditary monarchy. A country can be both democratic and republican."},
- {id:"hyksos",tags:["hyksos","egypt","history"],title:"Hyksos",text:"The Hyksos were a group of rulers who controlled parts of ancient Egypt during the Second Intermediate Period, especially in the north. The term is connected with foreign rulers in Egyptian historical tradition; modern scholarship treats their origins and identity as complex rather than as a single simple ethnic group."}
+window.SST_KNOWLEDGE=[
+{id:"river",subject:"Geography",tags:["river","water","drainage","tributary"],title:"River",text:"A river is a natural flowing watercourse. It generally begins at a source and flows toward a lower area, lake, sea, ocean or another river. Smaller streams or rivers joining a larger river are tributaries."},
+{id:"sea",subject:"Geography",tags:["sea","ocean","water"],title:"Sea",text:"A sea is generally a smaller division of the ocean and is often partly enclosed by land. Seas are salt-water bodies. Naming is historical/geographical, so size alone is not a perfect rule."},
+{id:"ocean",subject:"Geography",tags:["ocean","sea","water"],title:"Ocean",text:"An ocean is a vast interconnected body of salt water covering much of Earth. Major named oceans include Pacific, Atlantic, Indian, Southern and Arctic."},
+{id:"lake",subject:"Geography",tags:["lake","river","water"],title:"Lake",text:"A lake is a body of standing or relatively still water surrounded by land. Lakes may be natural or artificial and may contain fresh or saline water."},
+{id:"french-revolution",subject:"History",tags:["french revolution","france","1789","bastille","monarchy","republic"],title:"French Revolution",text:"The French Revolution began in 1789 amid social inequality, privileges, financial crisis, food hardship and political conflict. It challenged the old order and contributed to the end of monarchy and rise of republican politics."},
+{id:"hyksos",subject:"History",tags:["hyksos","egypt","second intermediate period"],title:"Hyksos",text:"The Hyksos were rulers who controlled parts of ancient Egypt during the Second Intermediate Period, especially northern Egypt. Their origins and identity are complex and should not be reduced to a simple modern ethnic category."},
+{id:"mercantilism",subject:"History/Economics",tags:["mercantilism","trade","colonialism"],title:"Mercantilism",text:"Mercantilism is a term for early modern economic ideas and state policies emphasizing regulated trade, state power and accumulation of wealth. Colonial trade was important in several European systems."},
+{id:"democracy",subject:"Civics",tags:["democracy","government","elections"],title:"Democracy",text:"Democracy is a system in which political authority is ultimately based on the people, commonly exercised directly or through elected representatives. Participation and accountability are central ideas."},
+{id:"republic",subject:"Civics",tags:["republic","monarchy","government"],title:"Republic",text:"A republic is a form of state in which public authority is exercised through public institutions and representatives rather than hereditary monarchy. A republic can also be democratic."},
+{id:"constitution",subject:"Civics",tags:["constitution","rights","government"],title:"Constitution",text:"A constitution is the fundamental framework of rules and principles by which a state is governed. It defines institutions, powers, procedures and often rights and limits on government."},
+{id:"inflation",subject:"Economics",tags:["inflation","prices","money"],title:"Inflation",text:"Inflation is a sustained rise in the general level of prices over time, reducing the purchasing power of money when incomes do not rise proportionately."},
+{id:"gdp",subject:"Economics",tags:["gdp","production","income"],title:"GDP",text:"Gross Domestic Product measures the monetary value of final goods and services produced within an economy during a specified period."}
 ];
-
-window.findKnowledge = function(query, limit=6){
-  const q = query.toLowerCase();
-  const terms = q.split(/[^a-z0-9\u0900-\u097f]+/).filter(x=>x.length>2);
-  return SST_KNOWLEDGE.map(item=>{
-    let score = 0;
-    item.tags.forEach(t=>{ if(q.includes(t)) score += 5; });
-    item.title.toLowerCase().split(/\s+/).forEach(t=>{ if(terms.includes(t)) score += 2; });
-    item.text.toLowerCase().split(/\s+/).forEach(t=>{ if(terms.includes(t)) score += .15; });
-    return {...item,score};
-  }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,limit);
-};
+window.findKnowledge=function(query,limit=8){const q=String(query||'').toLowerCase(),terms=q.split(/[^a-z0-9\u0900-\u097f]+/).filter(x=>x.length>2);return SST_KNOWLEDGE.map(i=>{let score=0;i.tags.forEach(t=>{if(q.includes(t))score+=8});terms.forEach(t=>{if(i.title.toLowerCase().includes(t))score+=4;if(i.tags.join(' ').includes(t))score+=2;if(i.text.toLowerCase().includes(t))score+=.4});return {...i,score}}).filter(i=>i.score>0).sort((a,b)=>b.score-a.score).slice(0,limit)};
