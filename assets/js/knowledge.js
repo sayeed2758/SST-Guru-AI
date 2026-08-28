@@ -1,29 +1,33 @@
-/* Layer 8: starter SST knowledge + Layer 9 retrieval foundation */
-window.SST_KNOWLEDGE = [
- {id:"river",subject:"Geography",tags:["river","drainage","tributary","source","channel"],title:"River",text:"A river is a natural flowing watercourse. It usually has a source, a channel and a course toward a lower area, lake, sea, ocean or another river. Tributaries are smaller streams or rivers that join a larger river."},
- {id:"sea",subject:"Geography",tags:["sea","ocean","water"],title:"Sea",text:"A sea is generally a smaller part of the ocean and is often partly enclosed by land. Seas are salt-water bodies. Names and boundaries are historical and geographical, so size alone is not a perfect rule."},
- {id:"ocean",subject:"Geography",tags:["ocean","sea","water"],title:"Ocean",text:"An ocean is a vast interconnected body of salt water. The five commonly named oceans are Pacific, Atlantic, Indian, Southern and Arctic."},
- {id:"lake",subject:"Geography",tags:["lake","water","inland"],title:"Lake",text:"A lake is a body of standing or relatively still water surrounded by land. It may be natural or artificial and can contain fresh or saline water."},
- {id:"french",subject:"History",tags:["french revolution","france","1789","bastille","monarchy","republic"],title:"French Revolution",text:"The French Revolution began in 1789 amid social inequality, privileged estates, financial crisis, food hardship and political conflict. It challenged the old order, contributed to the end of the monarchy and led to the French Republic."},
- {id:"hyksos",subject:"History",tags:["hyksos","egypt","second intermediate period"],title:"Hyksos",text:"The Hyksos were rulers who controlled parts of ancient Egypt during the Second Intermediate Period, especially northern Egypt. Their origins and identity are complex and should not be reduced to a single modern ethnic label."},
- {id:"mercantilism",subject:"History/Economics",tags:["mercantilism","trade","colonialism","economic"],title:"Mercantilism",text:"Mercantilism describes a family of early modern economic ideas and state policies emphasizing regulated trade, state power and wealth accumulation. Colonial trade was significant in several European systems."},
- {id:"democracy",subject:"Civics",tags:["democracy","people","elections","government"],title:"Democracy",text:"Democracy is a system in which political authority is based on the people, commonly exercised directly or through elected representatives. Participation, accountability and political rights are central ideas."},
- {id:"republic",subject:"Civics",tags:["republic","monarchy","state","representative"],title:"Republic",text:"A republic is a form of state in which public authority is exercised through public institutions and representatives rather than hereditary monarchy. A republic can also be democratic."},
- {id:"constitution",subject:"Civics",tags:["constitution","rights","government"],title:"Constitution",text:"A constitution is the fundamental framework of rules and principles by which a state is governed. It defines institutions, powers, procedures and often rights and limits on government."},
- {id:"inflation",subject:"Economics",tags:["inflation","prices","money"],title:"Inflation",text:"Inflation is a sustained rise in the general level of prices over time, reducing the purchasing power of money when incomes do not rise proportionately."},
- {id:"gdp",subject:"Economics",tags:["gdp","production","income"],title:"GDP",text:"Gross Domestic Product (GDP) measures the monetary value of final goods and services produced within an economy during a specified period."}
+window.SST_KB = [
+{subject:"History",title:"Adolf Hitler",tags:["hitler","adolf hitler","nazi","nazism","germany","world war 2","ww2","holocaust"],text:"Adolf Hitler was the leader of Nazi Germany. He became Chancellor of Germany in 1933 and established a dictatorship. Nazi ideology was racist, antisemitic and ultranationalist. His regime persecuted Jews and many other groups and was responsible for mass murder including the Holocaust. Germany's invasion of Poland in September 1939 led Britain and France to declare war, marking the beginning of the European phase of World War II. Hitler's Germany was defeated in 1945."},
+{subject:"History",title:"French Revolution",tags:["french revolution","france","1789","bastille","monarchy","republic"],text:"The French Revolution began in 1789 amid social inequality, privileges, financial crisis, food hardship and political conflict. The Bastille became a famous symbol of revolutionary upheaval. The old political order was challenged, monarchy was overthrown, and France became a republic in 1792. The Revolution passed through radical phases and had major political and social consequences."},
+{subject:"History",title:"Industrial Revolution",tags:["industrial revolution","industry","factory","steam","britain","machines"],text:"The Industrial Revolution was a major transformation from hand production toward machine production and factories, beginning in Britain in the eighteenth century and spreading more widely. Textile machinery, steam power, coal, iron, transport and factory organisation were important. It changed production, cities, work and social relations."},
+{subject:"History",title:"Hyksos",tags:["hyksos","egypt","second intermediate period"],text:"The Hyksos were rulers who controlled parts of ancient Egypt during the Second Intermediate Period, particularly northern Egypt. Their origins and identity are complex and should not be reduced to one modern ethnic label. They are associated with the political history of northern Egypt before the reunification under the Theban rulers."},
+{subject:"History",title:"Renaissance",tags:["renaissance","europe","humanism","art","revival"],text:"The Renaissance was a period of cultural and intellectual change in Europe, especially from the fourteenth to sixteenth centuries. Humanism, renewed interest in classical learning, artistic experimentation and new approaches to knowledge were important features."},
+{subject:"History",title:"Colonialism",tags:["colonialism","colony","empire","imperialism"],text:"Colonialism involves a state establishing control over another territory and its people, often involving political domination, economic exploitation and cultural influence. Different colonial systems varied greatly by place and period."},
+{subject:"Geography",title:"River",tags:["river","drainage","tributary","source","watercourse"],text:"A river is a natural flowing watercourse. It usually has a source and flows along a course toward a lower area, lake, sea, ocean or another river. A tributary is a smaller river or stream that joins a larger river."},
+{subject:"Geography",title:"Sea",tags:["sea","ocean","salt water"],text:"A sea is generally a smaller division of an ocean and is often partly enclosed by land. Seas are salt-water bodies. Boundaries and names can also reflect historical and geographical conventions."},
+{subject:"Geography",title:"Ocean",tags:["ocean","sea","salt water"],text:"An ocean is a vast interconnected body of salt water. The commonly named oceans are Pacific, Atlantic, Indian, Southern and Arctic."},
+{subject:"Geography",title:"Lake",tags:["lake","water","inland"],text:"A lake is a body of standing or relatively still water surrounded by land. It may be natural or artificial and may contain fresh or saline water."},
+{subject:"Geography",title:"Weather vs Climate",tags:["weather","climate","difference","atmosphere"],text:"Weather describes short-term atmospheric conditions at a particular place and time, such as today's temperature or rainfall. Climate describes the long-term pattern and average of weather over a region, usually assessed over many years."},
+{subject:"Geography",title:"Latitude vs Longitude",tags:["latitude","longitude","coordinates","equator","meridian"],text:"Latitude measures angular distance north or south of the Equator and is shown by parallels. Longitude measures angular distance east or west of the Prime Meridian and is shown by meridians."},
+{subject:"Civics",title:"Democracy",tags:["democracy","people","elections","government","representation"],text:"Democracy is a system in which political authority is based on the people, commonly exercised directly or through elected representatives. Participation, accountability, political equality and rights are important democratic ideas."},
+{subject:"Civics",title:"Republic",tags:["republic","monarchy","state","representative"],text:"A republic is a form of state in which public authority is exercised through public institutions and representatives rather than a hereditary monarch. A republic can also be democratic."},
+{subject:"Civics",title:"Democracy vs Republic",tags:["democracy republic","difference","democracy vs republic"],text:"Democracy mainly describes where political authority comes from: the people. Republic mainly describes a form of state in which public authority is not based on hereditary monarchy. The two ideas can overlap: a country can be both democratic and republican."},
+{subject:"Civics",title:"Constitution",tags:["constitution","rights","government","law"],text:"A constitution is the fundamental framework of rules and principles by which a state is governed. It defines institutions, powers, procedures and often rights and limits on government."},
+{subject:"Economics",title:"Inflation",tags:["inflation","prices","money","purchasing power"],text:"Inflation is a sustained rise in the general level of prices over time. When prices rise faster than income, the purchasing power of money falls."},
+{subject:"Economics",title:"GDP",tags:["gdp","production","income","economy"],text:"Gross Domestic Product measures the monetary value of final goods and services produced within an economy during a specified period."},
+{subject:"Economics",title:"Mercantilism",tags:["mercantilism","trade","colonialism","economic"],text:"Mercantilism describes a family of early modern economic ideas and state policies emphasizing regulated trade, state power and wealth accumulation. Colonial trade and state intervention were important in several European systems."}
 ];
-
-window.searchSSTKnowledge = function(query, extraDocs=[], limit=8){
- const q=String(query||"").toLowerCase();
- const docs=[...window.SST_KNOWLEDGE,...extraDocs];
- const terms=q.split(/[^a-z0-9\u0900-\u097f]+/).filter(t=>t.length>2);
+window.searchSST=function(q,userDocs,limit){
+ const docs=[...SST_KB,...(userDocs||[])], s=String(q).toLowerCase();
+ const terms=s.split(/[^a-z0-9]+/).filter(x=>x.length>1);
  return docs.map(d=>{
-   const hay=(d.title+" "+(d.subject||"")+" "+(d.tags||[]).join(" ")+" "+d.text).toLowerCase();
+   const hay=(d.title+" "+d.subject+" "+(d.tags||[]).join(" ")+" "+d.text).toLowerCase();
    let score=0;
-   (d.tags||[]).forEach(t=>{if(q.includes(String(t).toLowerCase()))score+=8});
-   terms.forEach(t=>{if(hay.includes(t))score+=1});
-   if(d.userDoc) score+=.5;
+   if(hay.includes(s))score+=20;
+   (d.tags||[]).forEach(t=>{if(s.includes(t.toLowerCase())||t.toLowerCase().includes(s))score+=10});
+   terms.forEach(t=>{if(hay.includes(t))score+=2});
    return {...d,score};
- }).filter(d=>d.score>0).sort((a,b)=>b.score-a.score).slice(0,limit);
+ }).filter(d=>d.score>0).sort((a,b)=>b.score-a.score).slice(0,limit||8);
 };
