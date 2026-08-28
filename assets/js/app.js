@@ -1,499 +1,132 @@
 (() => {
-  "use strict";
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const KEY="sst_guru_next_v5";
+const OLD="sst_guru_final_v1";
+const defaults={theme:"light",page:"ask",mode:"normal",messages:[],docs:[],prefs:{language:"Hinglish",level:"CBSE / School",detail:"Deep but simple"}};
+let state=JSON.parse(localStorage.getItem(KEY)||localStorage.getItem(OLD)||"null")||defaults;
+let runtime=JSON.parse(localStorage.getItem("sst_guru_runtime")||"null");
+if(runtime?.API_URL)SST_CONFIG.API_URL=runtime.API_URL;
+document.documentElement.dataset.theme=state.theme;
+const pageNames={ask:"Ask SST",story:"Story Mode",word:"Word Explainer",difference:"Difference Maker",timeline:"Timeline Builder",quiz:"Quiz Lab",exam:"Exam Mode",teacher:"Teacher Studio",library:"My SST Library"};
 
-  const $ = s => document.querySelector(s);
-  const $$ = s => [...document.querySelectorAll(s)];
-  const STORE = "sst_guru_v3";
-
-  const state = JSON.parse(localStorage.getItem(STORE) || "null") || {
-    theme:"light", screen:"ask", mode:"normal", messages:[], docs:[], prefs:{
-      language:"Hinglish", detail:"Deep but simple", teacherLevel:"CBSE / School"
-    }
-  };
-  const modeLabel = {normal:"Ask SST",story:"Story Mode",word:"Word Explainer",difference:"Difference Maker",exam:"Exam Mode",teacher:"Teacher Studio"};
-
-  const demoAnswers = [
-    {match:["river","sea","ocean"], answer:`### 🌊 River vs Sea vs Ocean
-
-**River:** natural **flowing** watercourse. It usually has a source and flows toward a lower area.
-
-**Sea:** a generally smaller part of an ocean, often partly enclosed by land.
-
-**Ocean:** a **vast interconnected** body of salt water.
-
-### 🧠 Memory trick
-**River = flows**  
-**Sea = partly enclosed**  
-**Ocean = enormous salt-water body**
-
-**Bonus:** A **lake** is mainly a body of water surrounded by land.`},
-    {match:["french revolution"], answer:`### 📖 French Revolution — story mode
-
-Imagine **France in 1789**.
-
-The old political and social order had deep inequalities. Privileged groups had special advantages, while ordinary people faced economic pressure and food hardship. The government also faced a serious financial crisis.
-
-Then the pressure became political action.
-
-**1789 → Revolution begins**
-
-The **Storming of the Bastille** became a famous symbol of the Revolution. The old order was challenged and events moved toward the abolition of the monarchy and the establishment of a republic.
-
-### 🔗 Cause → Event → Consequence
-**Social inequality + financial crisis + political conflict**
-→ **Revolution**
-→ **Old order challenged**
-→ **Republican politics**
-
-### 🎯 Remember
-Bastille was an important event, **not the only cause** of the Revolution.`},
-    {match:["mercantilism"], answer:`### 🔎 Mercantilism
-
-**Simple English:** a family of early-modern economic ideas and state policies that linked trade and economic regulation with state power and wealth.
-
-**Hinglish:** State trade ko strongly regulate karke apni economic aur political power badhana chahti thi.
-
-### 🧠 Example
-Socho ek country keh rahi hai: “Important trade hamare control mein rahe, useful resources aur markets se state ki strength badhe.”
-
-Colonial trade was important in several European mercantilist systems.
-
-**Memory:** **State + regulated trade + wealth/power**.`},
-    {match:["democracy","republic"], answer:`### ⚖️ Democracy vs Republic
-
-| Point | Democracy | Republic |
-|---|---|---|
-| Core idea | Political authority is based on the people | State is governed through public institutions/representatives, not hereditary monarchy |
-| Focus | Popular participation and accountability | Form/structure of the state |
-| Can they coexist? | Yes | Yes |
-
-### 🧠 Easy trick
-**Democracy → people’s political authority**
-
-**Republic → non-hereditary public state structure**
-
-So a country can be **both democratic and republican**.`},
-    {match:["hyksos"], answer:`### 🏺 Hyksos
-
-The **Hyksos** were rulers who controlled parts of ancient Egypt during the **Second Intermediate Period**, especially in northern Egypt.
-
-### Story
-Egypt was politically divided. During this period, Hyksos rulers established control in an important northern region.
-
-Their origins and identity are more complex than saying they were simply one modern ethnic group.
-
-### 🎯 Remember
-**Hyksos = rulers connected with northern Egypt during the Second Intermediate Period.**`},
-    {match:["inflation"], answer:`### 💰 Inflation
-
-**Simple meaning:** general prices rise over time.
-
-**Hinglish:** Jab economy mein overall cheezon aur services ki average prices badhti rehti hain, money ki purchasing power kam ho sakti hai.
-
-**Example:** Agar same ₹100 mein pehle 5 items aate the aur kuch time baad sirf 4, purchasing power has fallen.
-
-**Important:** One item becoming expensive by itself is not necessarily inflation; inflation refers to a broader and sustained rise in the general price level.`}
-  ];
-
-  function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
-  function md(s){
-    let x=esc(s);
-    x=x.replace(/```([\s\S]*?)```/g,"<pre><code>$1</code></pre>");
-    x=x.replace(/^### (.*)$/gm,"<h3>$1</h3>").replace(/^## (.*)$/gm,"<h3>$1</h3>");
-    x=x.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>");
-    x=x.replace(/^\s*[-•] (.*)$/gm,"<li>$1</li>");
-    x=x.replace(/(?:<li>.*?<\/li>\s*)+/gs,m=>`<ul>${m}</ul>`);
-    x=x.replace(/\|(.+)\|/g,(m,row)=>{
-      const cells=row.split("|").map(v=>v.trim()).filter(Boolean);
-      return `<div class="table-line">${cells.map(c=>`<span>${c}</span>`).join("")}</div>`;
-    });
-    x=x.replace(/\n{2,}/g,"</p><p>").replace(/\n/g,"<br>");
-    return `<div class="ai-answer"><p>${x}</p></div>`;
-  }
-
-  function save(){localStorage.setItem(STORE,JSON.stringify(state));}
-  function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove("show"),1800)}
-  function setTheme(){document.documentElement.dataset.theme=state.theme}
-  function title(){ $("#screenTitle").textContent = modeLabel[state.screen] || {
-      timeline:"Timeline",quiz:"Quiz Lab",library:"My SST Library"
-    }[state.screen] || "SST GURU AI"; }
-
-  function setScreen(screen){
-    state.screen=screen;
-    $("#sidebar").classList.remove("open");
-    $$(".nav-item[data-screen]").forEach(b=>b.classList.toggle("active",b.dataset.screen===screen));
-    title(); renderScreen();
-    save();
-  }
-
-  function renderScreen(){
-    const r={
-      ask:renderAsk, story:()=>renderMode("story"), word:()=>renderMode("word"),
-      difference:()=>renderMode("difference"), exam:()=>renderMode("exam"),
-      teacher:()=>renderMode("teacher"), timeline:renderTimeline,
-      quiz:renderQuiz, library:renderLibrary
-    };
-    (r[state.screen]||renderAsk)();
-  }
-
-  function renderHomeHero(){
-    return `<div class="hero">
-      <div class="kicker">YOUR PERSONAL SOCIAL SCIENCE AI</div>
-      <h1>Samajhna hai?<br><span>Story ki tarah samjho.</span></h1>
-      <p>History, Geography, Civics & Economics — simple Hinglish, deep concepts, clear examples, comparisons, timelines, quizzes and classroom tools.</p>
-      <div class="card-grid">
-        ${[
-          ["📖","History Story","French Revolution / any historical event","story"],
-          ["🌊","Geography Basics","River vs Sea vs Ocean","difference"],
-          ["🔎","Hard Word","Mercantilism / difficult terms","word"],
-          ["⚖️","Compare","Democracy vs Republic","difference"],
-          ["⏳","Timeline","Build an event sequence","timeline"],
-          ["🧠","Quiz Lab","Practice & remember concepts","quiz"],
-          ["🎯","Exam Mode","Key points + practice questions","exam"],
-          ["👨‍🏫","Teacher Studio","Classroom-ready explanation","teacher"]
-        ].map(([e,b,s,k])=>`<button class="mode-card" data-goto="${k}"><span class="emoji">${e}</span><b>${b}</b><small>${s}</small></button>`).join("")}
-      </div>
-    </div>`;
-  }
-
-  function composer(){
-    const chips=[
-      ["normal","🧠 Explain"],["story","📖 Story"],["word","🔎 Word"],
-      ["difference","⚖️ Difference"],["exam","🎯 Exam"],["teacher","👨‍🏫 Teacher"]
-    ];
-    return `<div class="composer-area">
-      <div class="chips">${chips.map(([m,label])=>`<button class="chip ${state.mode===m?"active":""}" data-mode="${m}">${label}</button>`).join("")}</div>
-      <div class="composer">
-        <button class="round-btn" id="micBtn" title="Voice input">🎙️</button>
-        <textarea id="promptInput" rows="1" placeholder="${placeholder()}"></textarea>
-        <button class="round-btn" id="speakBtn" title="Read last AI answer">🔊</button>
-        <button class="send" id="sendBtn">➤</button>
-      </div>
-      <div class="note">SST-only • Local demo brain works now • Live deep AI works after backend URL is configured</div>
-    </div>`;
-  }
-
-  function placeholder(){
-    return {
-      normal:"Ask anything about SST…",
-      story:"Example: French Revolution ko story ki tarah samjhao…",
-      word:"Example: Mercantilism ka meaning…",
-      difference:"Example: River vs Sea vs Ocean…",
-      exam:"Example: Industrial Revolution ke important exam points…",
-      teacher:"Example: Democracy ko class 8 ke students ko kaise samjhau?"
-    }[state.mode]||"Ask anything about SST…";
-  }
-
-  function renderAsk(){
-    $("#screen").innerHTML = renderHomeHero()+`
-      <div class="chat-shell">
-        <div class="chat-log" id="chatLog">${renderMessages()}</div>
-        ${composer()}
-      </div>`;
-    bindCommon();
-    bindChat();
-  }
-
-  function renderMessages(){
-    if(!state.messages.length)return "";
-    return state.messages.map((m,i)=>`<div class="message ${m.role}">
-      <div class="avatar">${m.role==="user"?"👨‍🏫":"📚"}</div>
-      <div class="bubble">${m.role==="user"?esc(m.content):md(m.content)}
-      ${m.role==="assistant"?`<div class="tools">
-        <button class="mini-btn" data-copy="${i}">Copy</button>
-        <button class="mini-btn" data-simplify="${i}">Make Simpler</button>
-        <button class="mini-btn" data-speak="${i}">Read Aloud</button>
-      </div>`:""}</div>
-    </div>`).join("");
-  }
-
-  function renderMode(mode){
-    state.mode=mode;
-    const info={
-      story:["📖 Story Mode","History ko chronological story, characters, conflict, turning point aur consequence ke through samjho."],
-      word:["🔎 Word Explainer","Difficult SST words ko simple English + Hinglish + context + example mein break karo."],
-      difference:["⚖️ Difference Maker","Do ya zyada confusing concepts ko side-by-side compare karo."],
-      exam:["🎯 Exam Mode","Concept + key points + practice questions + answer structure."],
-      teacher:["👨‍🏫 Teacher Studio","Classroom-ready explanation, analogy, common confusion and quick recap."]
-    }[mode];
-    $("#screen").innerHTML=`<div class="two-col">
-      <div class="panel panel-pad">
-        <div class="heading-row"><div><span class="badge">${info[0]}</span><h2 class="mode-title">${info[0]}</h2></div></div>
-        <p class="section-copy">${info[1]}</p>
-        <div class="field"><label>TOPIC</label><textarea class="textarea" id="modeTopic" rows="4" placeholder="${placeholder()}"></textarea></div>
-        <button class="btn primary" id="modeRun">Generate Explanation</button>
-        <button class="btn" id="modeAsk">Open in Ask SST</button>
-      </div>
-      <div class="panel panel-pad">
-        <div class="heading-row"><h3>What this mode does</h3></div>
-        <div class="three-col">
-          <div class="feature-tile"><b>🧠 Understand</b><span>Core concept first, then depth.</span></div>
-          <div class="feature-tile"><b>🗣️ Explain</b><span>Beginner-friendly Hinglish where useful.</span></div>
-          <div class="feature-tile"><b>🎯 Remember</b><span>Memory trick + recap.</span></div>
-        </div>
-      </div>
-    </div>`;
-    $("#modeRun").onclick=()=>ask($("#modeTopic").value);
-    $("#modeAsk").onclick=()=>{const q=$("#modeTopic").value;state.mode=mode;setScreen("ask");setTimeout(()=>{$("#promptInput").value=q;$("#sendBtn").click()},80)};
-  }
-
-  function renderTimeline(){
-    $("#screen").innerHTML=`<div class="panel panel-pad">
-      <div class="heading-row"><div><span class="badge">LAYER 12</span><h2 class="mode-title">Timeline Builder</h2><p class="section-copy">Events ko chronological sequence mein arrange karo.</p></div></div>
-      <div class="field"><label>TOPIC / EVENTS</label><input class="input" id="timelineInput" placeholder="French Revolution / Indian National Movement / World War I"></div>
-      <button class="btn primary" id="timelineBtn">Build Timeline</button>
-      <div id="timelineOut" style="margin-top:18px"></div>
-    </div>`;
-    $("#timelineBtn").onclick=()=>{
-      const q=$("#timelineInput").value.trim();
-      if(!q)return toast("Topic likho");
-      const events=timelineFor(q);
-      $("#timelineOut").innerHTML=`<div class="timeline">${events.map(e=>`<div class="timeline-item"><div class="timeline-year">${e[0]}</div><div class="timeline-box"><b>${e[1]}</b><span>${e[2]}</span></div></div>`).join("")}</div>`;
-    };
-  }
-
-  function timelineFor(q){
-    const s=q.toLowerCase();
-    if(s.includes("french"))return[
-      ["1789","Revolution begins","Social inequality, financial crisis and political conflict intensify."],
-      ["1789","Bastille","The fall of the Bastille becomes a major symbol of the Revolution."],
-      ["1791","Constitutional phase","France moves toward a constitutional framework."],
-      ["1792","Republic","Monarchy is overthrown and France becomes a republic."],
-      ["1793–94","Reign of Terror","Radical phase with executions and political repression."],
-      ["1799","Napoleon rises","Napoleon's coup ends the Directory."]
-    ];
-    if(s.includes("industrial"))return[
-      ["18th c.","Early change","Mechanisation develops in Britain."],
-      ["1760s–70s","Textile innovation","Machines transform spinning and weaving."],
-      ["Steam power","Factories expand","Steam power enables new industrial uses."],
-      ["19th c.","Urbanisation","Factory growth accelerates urban and social change."]
-    ];
-    return[
-      ["Start","Background","Identify the conditions before the main event."],
-      ["Turning point","Main event","Place the major development here."],
-      ["Aftermath","Consequences","Record the immediate and long-term results."],
-      ["Legacy","Why it matters","Connect the event to later history or society."]
-    ];
-  }
-
-  function renderQuiz(){
-    $("#screen").innerHTML=`<div class="panel panel-pad">
-      <div class="heading-row"><div><span class="badge">LAYER 13</span><h2 class="mode-title">Quiz Lab</h2><p class="section-copy">Topic do aur quick MCQ practice karo.</p></div><div id="quizScore" class="badge">Score: 0</div></div>
-      <div class="field"><label>TOPIC</label><input class="input" id="quizTopic" placeholder="Democracy / French Revolution / Drainage"></div>
-      <button class="btn primary" id="startQuiz">Start Quiz</button>
-      <div id="quizArea" style="margin-top:18px"></div>
-    </div>`;
-    let quiz=[],idx=0,score=0;
-    $("#startQuiz").onclick=()=>{
-      const topic=$("#quizTopic").value.trim()||"SST";
-      quiz=makeQuiz(topic);idx=0;score=0;draw();
-    };
-    function draw(){
-      if(idx>=quiz.length){$("#quizArea").innerHTML=`<div class="answer-card"><h3>🎉 Quiz Complete</h3><p>Your score: <strong>${score}/${quiz.length}</strong></p><button class="btn primary" id="retryQuiz">Try Again</button></div>`;$("#retryQuiz").onclick=()=>{$("#startQuiz").click()};return}
-      const q=quiz[idx];
-      $("#quizScore").textContent=`Score: ${score}`;
-      $("#quizArea").innerHTML=`<div class="answer-card"><span class="badge">Question ${idx+1}/${quiz.length}</span><h3>${esc(q.q)}</h3>${q.options.map((o,i)=>`<button class="quiz-option" data-q="${i}">${esc(o)}</button>`).join("")}<div class="muted" id="quizFeedback"></div></div>`;
-      $$(".quiz-option").forEach(b=>b.onclick=()=>{
-        const picked=+b.dataset.q;
-        $$(".quiz-option").forEach(x=>x.disabled=true);
-        if(picked===q.a){b.classList.add("correct");score++;$("#quizFeedback").innerHTML="✅ Correct!";}else{b.classList.add("wrong");$(`.quiz-option[data-q="${q.a}"]`).classList.add("correct");$("#quizFeedback").innerHTML=`❌ Correct answer: ${esc(q.options[q.a])}`;}
-        setTimeout(()=>{idx++;draw()},800);
-      });
-    }
-  }
-
-  function makeQuiz(topic){
-    const t=topic.toLowerCase();
-    if(t.includes("democracy"))return[
-      {q:"In a democracy, political authority is ultimately based on whom?",options:["People","Hereditary ruler","Military only","One business group"],a:0},
-      {q:"Can a republic also be democratic?",options:["No","Yes","Only in ancient times","Never"],a:1},
-      {q:"Which idea is closely connected with democracy?",options:["Political participation","Hereditary privilege","No elections","Rule without accountability"],a:0},
-      {q:"A republic primarily distinguishes the form of the state from what?",options:["Hereditary monarchy","Agriculture","Climate","Language"],a:0},
-      {q:"What is one useful memory trick?",options:["Democracy = people; Republic = non-hereditary public state","Democracy = ocean","Republic = river","Both mean exactly the same thing"],a:0}
-    ];
-    if(t.includes("french")||t.includes("revolution"))return[
-      {q:"The French Revolution began in which year?",options:["1776","1789","1815","1914"],a:1},
-      {q:"Which was a major underlying cause?",options:["Social inequality","Internet access","Industrial robots","Space travel"],a:0},
-      {q:"The Bastille became a symbol of what?",options:["Revolutionary upheaval","Ocean trade","Agricultural reform","Railway expansion"],a:0},
-      {q:"The monarchy was eventually replaced by what political direction?",options:["Republic","Empire of Rome","Feudal village","Colony"],a:0},
-      {q:"Which is the best explanation?",options:["Bastille was the only cause","The Revolution had multiple social, economic and political causes","It was only a food festival","It started in 1914"],a:1}
-    ];
-    return[
-      {q:`Which type of topic is "${topic}" most likely to belong to?`,options:["Social Science","Only Chemistry","Only Physics","Only Coding"],a:0},
-      {q:"What should you identify first when learning a new SST concept?",options:["Core meaning","Every date in a textbook","Random facts","Nothing"],a:0},
-      {q:"For History, which order is especially useful?",options:["Cause → Event → Consequence","Effect → Cause only","Random order","Alphabetical order"],a:0},
-      {q:"For Geography, what helps avoid confusion?",options:["Clear definitions and examples","Memorising unrelated words","Ignoring location","Only dates"],a:0},
-      {q:"A good revision trick is:",options:["Explain the idea in your own words","Read without thinking","Skip examples","Avoid comparisons"],a:0}
-    ];
-  }
-
-  function renderLibrary(){
-    const docs=state.docs||[];
-    $("#screen").innerHTML=`<div class="two-col">
-      <div class="panel panel-pad">
-        <div class="heading-row"><div><span class="badge">LAYER 14</span><h2 class="mode-title">My SST Library</h2></div></div>
-        <p class="section-copy">Apne notes add karo. Browser-supported text/markdown/JSON/CSV files are indexed locally. PDF text extraction is attempted when available.</p>
-        <div class="field"><label>UPLOAD SST MATERIAL</label><input class="input" id="docInput" type="file" multiple accept=".txt,.md,.json,.csv,.pdf"></div>
-        <button class="btn primary" id="indexBtn">Index Selected Files</button>
-        <button class="btn" id="resetLibrary">Remove My Library</button>
-      </div>
-      <div class="panel panel-pad">
-        <div class="heading-row"><h3>Indexed materials</h3><span class="badge">${docs.length} docs</span></div>
-        <div class="library-list">${docs.length?docs.map((d,i)=>`<div class="library-item"><div><strong>${esc(d.title)}</strong><small>${esc(d.subject||"SST")} • ${d.text.length} chars</small></div><button class="mini-btn" data-del-doc="${i}">Remove</button></div>`).join(""):`<div class="muted">No personal documents indexed yet.</div>`}</div>
-      </div>
-    </div>`;
-    $("#indexBtn").onclick=()=>indexFiles();
-    $("#resetLibrary").onclick=()=>{state.docs=[];save();renderLibrary();toast("Library cleared")};
-    $$(".mini-btn[data-del-doc]").forEach(b=>b.onclick=()=>{state.docs.splice(+b.dataset.delDoc,1);save();renderLibrary()});
-  }
-
-  async function indexFiles(){
-    const input=$("#docInput");if(!input.files.length)return toast("File select karo");
-    for(const f of input.files){
-      let text="";
-      if(f.type==="application/pdf" || f.name.toLowerCase().endsWith(".pdf")){
-        text=await extractPDF(f);
-      }else{
-        text=await f.text();
-        if(f.name.toLowerCase().endsWith(".json")){
-          try{text=JSON.stringify(JSON.parse(text),null,2)}catch{}
-        }
-      }
-      if(text.trim()) state.docs.push({id:crypto.randomUUID?.()||String(Date.now()+Math.random()),title:f.name,subject:"My SST Library",text:text.slice(0,200000),tags:[],userDoc:true});
-    }
-    save();renderLibrary();toast("Library indexed");
-  }
-
-  async function extractPDF(file){
-    try{
-      const mod=await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.min.mjs");
-      mod.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.worker.min.mjs";
-      const buf=await file.arrayBuffer(); const pdf=await mod.getDocument({data:buf}).promise; let out="";
-      for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p);const c=await page.getTextContent();out+=c.items.map(i=>i.str).join(" ")+"\\n";}
-      return out;
-    }catch(e){toast("PDF extraction unavailable; try TXT/MD for now");return "";}
-  }
-
-  function bindCommon(){
-    $$(".mode-card[data-goto]").forEach(b=>b.onclick=()=>setScreen(b.dataset.goto));
-    $$(".nav-item[data-screen]").forEach(b=>b.onclick=()=>setScreen(b.dataset.screen));
-    $$(".chip").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;renderAsk();save()});
-  }
-
-  function bindChat(){
-    const send=()=>{const t=$("#promptInput");const v=t.value;t.value="";t.style.height="auto";ask(v)};
-    $("#sendBtn").onclick=send;
-    $("#promptInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
-    $("#promptInput").addEventListener("input",e=>{e.target.style.height="auto";e.target.style.height=Math.min(170,e.target.scrollHeight)+"px"});
-    $("#speakBtn").onclick=()=>speakLast();
-    $("#micBtn").onclick=()=>voiceInput();
-    $$("#chatLog [data-copy]").forEach(b=>b.onclick=()=>{navigator.clipboard?.writeText(state.messages[+b.dataset.copy].content);toast("Copied")});
-    $$("#chatLog [data-simplify]").forEach(b=>b.onclick=()=>ask("Is explanation ko aur simple Hinglish mein, beginner teacher level par samjhao."));
-    $$("#chatLog [data-speak]").forEach(b=>b.onclick=()=>speak(state.messages[+b.dataset.speak].content));
-  }
-
-  function findDemo(q){
-    const s=q.toLowerCase();
-    return demoAnswers.find(d=>d.match.every(k=>s.includes(k)))?.answer ||
-      demoAnswers.find(d=>d.match.some(k=>s.includes(k)))?.answer;
-  }
-
-  async function ask(prompt){
-    const clean=String(prompt||"").trim(); if(!clean)return toast("Question likho");
-    state.messages.push({role:"user",content:clean});save();renderAsk();
-
-    const context=searchSSTKnowledge(clean,state.docs||[],SST_CONFIG.MAX_SOURCES);
-    let answer=null;
-    try{
-      if(SST_CONFIG.API_URL && !SST_CONFIG.API_URL.includes("PASTE_YOUR")){
-        const history=state.messages.slice(-SST_CONFIG.MAX_HISTORY).map(m=>({role:m.role,content:m.content}));
-        const res=await fetch(SST_CONFIG.API_URL.replace(/\/$/,"")+"/chat",{
-          method:"POST",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({message:clean,mode:state.mode,history,context,prefs:state.prefs})
-        });
-        const data=await res.json();
-        if(!res.ok)throw new Error(data.error||"Backend error");
-        answer=data.answer;
-      }else{
-        answer=findDemo(clean) || localBrain(clean,context);
-      }
-    }catch(e){
-      answer=`### ⚠️ Live AI connection issue\n\n${e.message}\n\nThe local SST brain is available. Check **Settings → Backend URL** when you are ready for live deep AI.`;
-    }
-    state.messages.push({role:"assistant",content:answer});save();renderAsk();
-  }
-
-  function localBrain(q,ctx){
-    const s=q.toLowerCase();
-    const source=ctx[0];
-    if(state.mode==="word"){
-      const term=q.replace(/^(word|meaning|define|explain)\s*[:\-]?\s*/i,"").trim();
-      return `### 🔎 ${term}\n\n**Simple English:** ${source?.text?.split(". ")[0]||"This is an SST-related term. Ask with a specific term for a deeper explanation."}\n\n**Hinglish:** Isko simple language mein samjho, phir context mein dekho ki textbook mein iska role kya hai.\n\n**SST context:** ${source?.title||"No exact local entry matched."}\n\n**Memory trick:** Pehle meaning yaad karo, phir example se connect karo.`;
-    }
-    if(state.mode==="difference"){
-      return `### ⚖️ Compare Mode\n\nMujhe do concepts clearly likho, jaise **River vs Sea**, **Democracy vs Republic**, ya **Climate vs Weather**.\n\n${ctx.length?`Mere paas related SST material mila: **${ctx[0].title}**.`:"Abhi exact local entries nahi mili."}\n\nMain next answer mein **definition → key difference → example → memory trick** format use karunga.`;
-    }
-    if(state.mode==="story"){
-      return `### 📖 Story Mode\n\nChalo **${q}** ko ek scene ki tarah imagine karte hain.\n\n**Background:** Sabse pehle situation samjho.\n\n**Characters / Groups:** Kaun involved tha?\n\n**Conflict:** Problem kya thi?\n\n**Turning Point:** Kya event situation ko change karta hai?\n\n**Result:** Uske baad kya hua?\n\n**🎯 Memory:** ${source?.title||q} ko **background → conflict → event → consequence** chain se yaad rakho.`;
-    }
-    if(state.mode==="exam"){
-      return `### 🎯 Exam Mode — ${q}\n\n**Core idea:** ${source?.text?.split(". ").slice(0,2).join(". ")||"Topic ka central concept identify karo."}\n\n**5 key points:**\n1. Definition / meaning\n2. Background / context\n3. Main feature or event\n4. Cause → effect\n5. Why it matters\n\n**Practice:**\n- 1 MCQ\n- 1 short answer\n- 1 long answer\n\n**Answer tip:** Headings + keywords + example use karo.`;
-    }
-    if(state.mode==="teacher"){
-      return `### 👨‍🏫 Teacher Studio — ${q}\n\n**Classroom opening:** “Chalo isko ek simple real-life example se samjhte hain…”\n\n**Core explanation:** ${source?.text||"Topic ko pehle one-line meaning se start karo."}\n\n**Analogy:** Kisi familiar daily-life situation se connect karo.\n\n**Common confusion:** Similar-looking terms ko side-by-side compare karo.\n\n**30-second recap:** Definition → example → why it matters.`;
-    }
-    return `### 🧠 SST GURU — ${q}\n\n${source?.text||"Is topic ke liye local starter knowledge mein exact passage nahi mila."}\n\n**Next step:** Is topic ko Story, Difference, Exam ya Teacher Mode mein aur deeply explore kar sakte ho.`;
-  }
-
-  function speak(text){
-    if(!("speechSynthesis" in window))return toast("Text-to-speech supported nahi hai");
-    speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text.replace(/[#*`|]/g," "));
-    u.rate=.96;u.pitch=1; speechSynthesis.speak(u);
-  }
-  function speakLast(){const last=[...state.messages].reverse().find(m=>m.role==="assistant");if(last)speak(last.content);else toast("No AI answer yet")}
-  function voiceInput(){
-    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    if(!SR)return toast("Voice input browser mein supported nahi hai");
-    const r=new SR();r.lang="en-IN";r.interimResults=false;r.maxAlternatives=1;
-    r.onresult=e=>{$("#promptInput").value=e.results[0][0].transcript;toast("Voice captured")};
-    r.onerror=()=>toast("Voice input failed");r.start();
-  }
-
-  $("#newChatBtn").onclick=()=>{state.messages=[];state.mode="normal";save();setScreen("ask");toast("New conversation")};
-  $("#clearBtn").onclick=()=>{if(confirm("Clear local chats, preferences and your library?")){localStorage.removeItem(STORE);location.reload()}};
-  $("#themeBtn").onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";setTheme();save();toast(state.theme==="dark"?"Dark mode":"Light mode")};
-  $("#menuBtn").onclick=()=>$("#sidebar").classList.toggle("open");
-  $("#exportAllBtn").onclick=()=>{
-    const text=state.messages.map(m=>`${m.role.toUpperCase()}\n${m.content}`).join("\n\n---\n\n");
-    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"}));a.download="sst-guru-chat.txt";a.click();URL.revokeObjectURL(a.href);toast("Chat exported");
-  };
-  $("#settingsBtn").onclick=()=>showSettings();
-
-  function showSettings(){
-    const o=document.createElement("div");o.className="overlay";o.id="settingsOverlay";
-    o.innerHTML=`<div class="modal"><div class="heading-row"><h2 class="mode-title">⚙️ Settings</h2><button class="icon-btn" id="closeSettings">✕</button></div>
-      <div class="field"><label>BACKEND URL (optional for live AI)</label><input class="input" id="apiUrl" value="${esc(SST_CONFIG.API_URL)}" placeholder="https://your-worker.workers.dev"></div>
-      <div class="two-col">
-        <div class="field"><label>LANGUAGE STYLE</label><select class="select" id="lang"><option>Hinglish</option><option>English</option><option>Hindi</option></select></div>
-        <div class="field"><label>DETAIL LEVEL</label><select class="select" id="detail"><option>Deep but simple</option><option>Balanced</option><option>Very detailed</option></select></div>
-      </div>
-      <div class="field"><label>TEACHING LEVEL</label><input class="input" id="teacherLevel" value="${esc(state.prefs.teacherLevel)}"></div>
-      <div class="stat-row"><span class="badge">Layer 1 UI</span><span class="badge">Layer 2 Modes</span><span class="badge">Layer 8 KB</span><span class="badge">Layer 14 Library</span></div>
-      <p class="section-copy">API key should never be stored here. Only put your deployed backend URL. The key stays server-side.</p>
-      <button class="btn primary" id="saveSettings">Save Settings</button>
-    </div>`;
-    document.body.appendChild(o);
-    $("#lang").value=state.prefs.language;$("#detail").value=state.prefs.detail;
-    $("#closeSettings").onclick=()=>o.remove();
-    $("#saveSettings").onclick=()=>{
-      SST_CONFIG.API_URL=$("#apiUrl").value.trim();state.prefs.language=$("#lang").value;state.prefs.detail=$("#detail").value;state.prefs.teacherLevel=$("#teacherLevel").value.trim()||"CBSE / School";
-      localStorage.setItem("sst_guru_runtime_config",JSON.stringify({API_URL:SST_CONFIG.API_URL}));
-      save();o.remove();toast("Settings saved");
-    };
-  }
-
-  const runtime=JSON.parse(localStorage.getItem("sst_guru_runtime_config")||"null");
-  if(runtime?.API_URL)SST_CONFIG.API_URL=runtime.API_URL;
-  setTheme();setScreen("ask");
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function toast(m){let t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove("show"),1700)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function md(s){
+ let x=esc(s);
+ x=x.replace(/```([\s\S]*?)```/g,"<pre><code>$1</code></pre>");
+ x=x.replace(/^### (.*)$/gm,"<h3>$1</h3>").replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>");
+ x=x.replace(/^\s*[-•] (.*)$/gm,"<li>$1</li>");
+ x=x.replace(/(?:<li>.*?<\/li>\s*)+/gs,m=>"<ul>"+m+"</ul>");
+ x=x.replace(/\|([^|\n]+)\|([^|\n]+)\|/g,(m,a,b)=>`<div class="table"><span><strong>${a.trim()}</strong></span><span><strong>${b.trim()}</strong></span></div>`);
+ x=x.replace(/\n{2,}/g,"</p><p>").replace(/\n/g,"<br>");
+ return `<div class="answer"><p>${x}</p></div>`;
+}
+function setPage(page){state.page=page;state.mode=page==="ask"?"normal":(page==="story"||page==="word"||page==="difference"||page==="exam"||page==="teacher"?page:state.mode);save();render();$("#sidebar").classList.remove("open")}
+function bindNav(){
+ $$(".nav-btn[data-page]").forEach(b=>b.onclick=()=>setPage(b.dataset.page));
+ $$(".quick-card").forEach(b=>b.onclick=()=>setPage(b.dataset.goto));
+ $$(".chip").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;renderAsk();setTimeout(()=>$("#prompt")?.focus(),30)});
+}
+function hero(){
+ const cards=[
+ ["📖","History Story","Hitler / French Revolution / any event","story"],["🌊","Geography Basics","River vs Sea vs Ocean","difference"],
+ ["🔎","Hard Word","Mercantilism / difficult term","word"],["⚖️","Compare","Democracy vs Republic","difference"],
+ ["⏳","Timeline","Build chronology","timeline"],["🧠","Quiz Lab","Practice concepts","quiz"],
+ ["🎯","Exam Mode","Exam-ready answers","exam"],["👨‍🏫","Teacher Studio","Classroom explanations","teacher"]];
+ return `<section class="hero"><div class="kicker">YOUR PERSONAL SOCIAL SCIENCE AI</div><h1>Samajhna hai?<br><span>Story ki tarah samjho.</span></h1><p>History, Geography, Civics & Economics — simple Hinglish, deep concepts, clear examples, comparisons, timelines, quizzes and teacher tools.</p><div class="quick-grid">${cards.map(c=>`<button class="quick-card" data-goto="${c[3]}"><span class="emoji">${c[0]}</span><strong>${c[1]}</strong><small>${c[2]}</small></button>`).join("")}</div></section>`;
+}
+function composer(){
+ const chips=[["normal","🧠 Explain"],["story","📖 Story"],["word","🔎 Word"],["difference","⚖️ Difference"],["exam","🎯 Exam"],["teacher","👨‍🏫 Teacher"]];
+ return `<div class="composer-area"><div class="chips">${chips.map(c=>`<button class="chip ${state.mode===c[0]?"active":""}" data-mode="${c[0]}">${c[1]}</button>`).join("")}</div><div class="composer"><button class="round" id="mic">🎙️</button><textarea id="prompt" rows="1" placeholder="${placeholder()}"></textarea><button class="round" id="speak">🔊</button><button class="send" id="send">➤</button></div><div class="note">SST ONLY • Offline starter brain works • Secure backend optional</div></div>`;
+}
+function placeholder(){return {normal:"Ask anything about SST…",story:"Hitler ki story / French Revolution ki story…",word:"Mercantilism ka meaning…",difference:"River vs Sea vs Ocean…",exam:"Industrial Revolution ke exam points…",teacher:"Democracy ko class 8 ko kaise samjhau?"}[state.mode]||"Ask about SST…"}
+function messages(){
+ if(!state.messages.length)return `<div class="empty" style="margin:auto;max-width:560px">👋 <strong>Namaste Sir!</strong><br>History, Geography, Civics ya Economics ka koi bhi SST question poochho.</div>`;
+ return state.messages.map((m,i)=>`<div class="message ${m.role==="assistant"?"ai":"user"}"><div class="avatar">${m.role==="assistant"?"📚":"👨‍🏫"}</div><div class="bubble">${m.role==="assistant"?md(m.content):esc(m.content)}${m.role==="assistant"?`<div class="message-tools"><button class="mini" data-copy="${i}">Copy</button><button class="mini" data-simple="${i}">Make Simpler</button><button class="mini" data-read="${i}">Read Aloud</button></div>`:""}</div></div>`).join("");
+}
+function renderAsk(){$("#pageTitle").textContent="Ask SST";$("#content").innerHTML=hero()+`<div class="chat"><div class="messages" id="messages">${messages()}</div>${composer()}</div>`;bindNav();bindAsk()}
+function bindAsk(){
+ const send=()=>{const t=$("#prompt"),v=t.value.trim();if(!v)return toast("Question likho");t.value="";t.style.height="auto";ask(v)};
+ $("#send").onclick=send;
+ $("#prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
+ $("#prompt").addEventListener("input",e=>{e.target.style.height="auto";e.target.style.height=Math.min(150,e.target.scrollHeight)+"px"});
+ $("#mic").onclick=voice;$("#speak").onclick=()=>{let a=[...state.messages].reverse().find(x=>x.role==="assistant");a?speak(a.content):toast("Answer nahi hai")};
+ $$("#messages [data-copy]").forEach(b=>b.onclick=()=>{navigator.clipboard?.writeText(state.messages[+b.dataset.copy].content);toast("Copied")});
+ $$("#messages [data-simple]").forEach(b=>b.onclick=()=>{let original=state.messages[+b.dataset.simple]?.content||"";let q=`Is explanation ko beginner teacher ke liye aur simple Hinglish mein, example aur memory trick ke saath samjhao. Original: ${original.slice(0,5000)}`;ask(q)});
+ $$("#messages [data-read]").forEach(b=>b.onclick=()=>speak(state.messages[+b.dataset.read].content));
+}
+function direct(q,ctx){
+ const s=q.toLowerCase().trim();
+ // Normalize common follow-ups so "ha samjhao" can continue the last topic.
+ if(/^(ha|haan|yes|ok|okay|samjhao|ha samjhao|detail|aur|continue)\b/.test(s)){
+   const last=state.messages.filter(m=>m.role==="user").slice(-2)[0];
+   if(last && last.content.toLowerCase()!==s) q=last.content+" — ab aur detail mein samjhao";
+ }
+ const topic=searchSST(q,state.docs,8);
+ const top=topic[0];
+ if(state.mode==="story"){
+   if(top)return story(top);
+   return storyGeneric(q);
+ }
+ if(state.mode==="word")return word(top,q);
+ if(state.mode==="difference")return difference(q,topic);
+ if(state.mode==="exam")return exam(top,q);
+ if(state.mode==="teacher")return teacher(top,q);
+ if(top)return `### 🧠 ${top.title}\n\n**Simple meaning:** ${top.text}\n\n**Hinglish:** ${hinglish(top)}\n\n**Memory trick:** ${memory(top)}\n\n**Quick check:** Agar chaho, isi topic ko **Story / Difference / Exam / Teacher** mode mein bhi kar sakte ho.`;
+ return `### 🧠 SST GURU\n\nMujhe is exact topic ka offline starter entry nahi mila. Lekin main SST-focused hoon.\n\nTry: **History event/name**, **Geography concept**, **Civics term**, ya **Economics concept**. Live deep AI ke liye ⚙️ Settings mein secure backend URL connect kar sakte ho.`;
+}
+function hinglish(d){return d.title==="Adolf Hitler"?"Hitler Nazi Germany ka dictator tha. 1933 mein Chancellor bana, dictatorship establish ki aur racist/antisemitic Nazi policies ke through severe persecution aur mass murder hua. 1945 mein Nazi Germany defeat hui.":d.title==="River"?"River ek natural flowing watercourse hai — source se flow karke lower area, lake, sea, ocean ya another river ki taraf ja sakti hai.":d.title==="Sea"?"Sea usually ocean ka comparatively smaller part hota hai aur aksar land se partly enclosed hota hai.":d.title==="Ocean"?"Ocean bahut huge interconnected salt-water body hota hai.":"Is concept ko pehle one-line definition se pakdo, phir example se connect karo."}
+function memory(d){return d.title==="River"?"RIVER = FLOW":d.title==="Sea"?"SEA = PARTLY ENCLOSED":d.title==="Ocean"?"OCEAN = VAST": d.title==="Adolf Hitler"?"1933 → Dictatorship → War → 1945 defeat":"Definition → Example → Why it matters";}
+function story(d){if(d.title==="Adolf Hitler")return `### 📖 Hitler ki Story — chronology ke saath\n\n**Scene 1 — Germany after World War I**\nGermany political aur economic crisis, resentment aur instability se guzar raha tha. Hitler aur Nazi Party ne is situation ka political advantage liya.\n\n**Scene 2 — 1933: Power mein entry**\nHitler **Chancellor** bana. Uske baad democratic institutions ko dismantle karke dictatorship establish ki gayi.\n\n**Scene 3 — Nazi ideology**\nNazi ideology extreme nationalism, racism aur antisemitism par based thi. Jews aur kai other groups ko persecution, imprisonment aur murder ka target banaya gaya.\n\n**Scene 4 — War**\nGermany ki expansionist policy ne Europe ko war ki taraf push kiya. **September 1939 mein Poland par German invasion** ke baad Britain aur France ne Germany ke khilaf war declare ki.\n\n**Scene 5 — Holocaust**\nNazi regime ne European Jews ke systematic persecution aur mass murder ko organise kiya. Is genocide ko **Holocaust** kaha jata hai.\n\n**Scene 6 — 1945: End**\nWorld War II ke European theatre mein Nazi Germany defeat hui aur Hitler ne April 1945 mein suicide kiya.\n\n### 🎯 Memory Chain\n**Crisis → Nazi rise → Dictatorship → Persecution → War → Holocaust → Defeat (1945)**\n\n⚠️ Hitler ki story ko hero-story ki tarah nahi, **dictatorship, propaganda, racism, persecution aur war ke historical case** ki tarah samajhna chahiye.`;
+ if(d.title==="French Revolution")return `### 📖 French Revolution — story\n\n**Background:** inequality + privileges + financial crisis + food hardship.\n\n**1789:** Revolution begins. Bastille ka fall revolutionary upheaval ka famous symbol bana.\n\n**Turning point:** old political order challenge hua; monarchy eventually overthrown hui.\n\n**1792:** France republic bana.\n\n**Aftermath:** radical phase, political violence aur later Napoleon ka rise.\n\n### 🎯 Memory\n**Inequality → Crisis → Revolution → Republic → Radical phase → Napoleon**`;
+ return `### 📖 ${d.title} — Story Mode\n\n**Background:** ${d.text}\n\n**Conflict / Change:** Is topic mein main change kya hua, usko identify karo.\n\n**Result:** Is change ne society, politics, economy ya geography ko kaise affect kiya?\n\n### 🧠 Memory Chain\n**Background → Change → Consequence → Legacy**`;}
+function storyGeneric(q){return `### 📖 ${esc(q)} — Story Mode\n\n**1. Background:** Pehle situation kya thi?\n\n**2. Main characters/groups:** Kaun involved tha?\n\n**3. Conflict/problem:** Main tension kya thi?\n\n**4. Turning point:** Kaunsa event situation badalta hai?\n\n**5. Consequence:** Uske baad kya hua?\n\n**6. Memory:** Background → Conflict → Event → Consequence.`}
+function word(d,q){return `### 🔎 Word Explainer\n\n**Word:** ${esc(d?.title||q)}\n\n**Simple English:** ${d?.text||"Is term ka exact offline entry nahi mila."}\n\n**Hinglish:** ${d?hinglish(d):"Context ke saath meaning samajhna best rahega."}\n\n**Example:** ${d?`Imagine a classroom example where **${d.title}** ko real situation se connect kiya jaye.`:"Topic ko ek familiar real-life example se connect karo."}\n\n**Memory trick:** ${d?memory(d):"Meaning → context → example."}`}
+function difference(q,docs){
+ if(docs.length>=2)return `### ⚖️ Difference Maker\n\n| Concept A | Concept B |\n| ${docs[0].title} | ${docs[1].title} |\n\n**${docs[0].title}:** ${docs[0].text}\n\n**${docs[1].title}:** ${docs[1].text}\n\n### 🧠 Shortcut\nFirst concept ko uski **defining feature** se yaad rakho, second ko uski defining feature se.`;
+ return `### ⚖️ Difference Maker\n\nMujhe comparison ke liye dono terms clear chahiye.\n\nExample: **River vs Sea vs Ocean**, **Weather vs Climate**, **Democracy vs Republic**.\n\nFormat: **Definition → 3 key differences → example → memory trick.**`}
+function exam(d,q){return `### 🎯 Exam Mode — ${esc(d?.title||q)}\n\n**1. Definition / Introduction:** ${d?.text||"Topic ko one-line definition se start karo."}\n\n**2. Key points:**\n- Background / meaning\n- Main features or causes\n- Important event / process\n- Consequences\n- One suitable example\n\n**3. Answer writing tip:** Definition → 3–5 points → example → conclusion.\n\n**4. Practice questions:**\n- 1 mark: Define / identify.\n- 2 marks: Give two features or reasons.\n- 5 marks: Explain the topic with causes, development and consequences.`}
+function teacher(d,q){return `### 👨‍🏫 Teacher Studio — ${esc(d?.title||q)}\n\n**Class opener:** “Aaj is concept ko ek simple real-life situation se connect karte hain.”\n\n**Core explanation:** ${d?.text||"Topic ko simple definition se start karo."}\n\n**Board flow:**\n1. Definition\n2. Background\n3. Example\n4. Cause / effect\n5. Student confusion\n6. 20-second recap\n\n**Ask students:** “Agar ye condition change ho jaye, result kya badlega?”\n\n**Final recap:** One-line meaning + one example + one memory trick.`}
+async function ask(q){
+ state.messages.push({role:"user",content:q});save();renderAsk();
+ const ctx=searchSST(q,state.docs,8);
+ let answer=null;
+ // Offline answer is immediate and reliable. Backend is tried only when explicitly configured.
+ if(SST_CONFIG.API_URL&&!SST_CONFIG.API_URL.includes("PASTE_YOUR")){
+  try{
+   const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),9000);
+   const r=await fetch(SST_CONFIG.API_URL.replace(/\/$/,"")+"/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q,mode:state.mode,history:state.messages.slice(-12),context:ctx,prefs:state.prefs}),signal:controller.signal});
+   clearTimeout(timer);const d=await r.json();if(r.ok&&d.answer)answer=d.answer;
+  }catch(e){/* fallback below */ }
+ }
+ if(!answer)answer=direct(q,ctx);
+ state.messages.push({role:"assistant",content:answer});save();renderAsk();
+}
+function renderMode(mode){
+ state.mode=mode;const data={story:["📖","Story Mode","History ko background → conflict → turning point → consequence ke through samjho."],word:["🔎","Word Explainer","Difficult SST words ko simple English + Hinglish + example mein break karo."],difference:["⚖️","Difference Maker","Confusing concepts ko clear comparison aur memory trick se samjho."],exam:["🎯","Exam Mode","Concept, keywords, answer structure aur practice questions."],teacher:["👨‍🏫","Teacher Studio","Classroom-ready explanation, analogy aur common confusion."]}[mode];
+ $("#pageTitle").textContent=data[1];$("#content").innerHTML=`<div class="two"><section class="panel pad"><div class="heading"><div><span class="badge">${data[0]} ${data[1]}</span><h2>${data[1]}</h2></div></div><p class="copy">${data[2]}</p><div class="field"><label>TOPIC / QUESTION</label><textarea class="textarea" id="modeInput" rows="5" placeholder="${placeholder()}"></textarea></div><button class="btn primary" id="runMode">Generate</button> <button class="btn" id="askMode">Open in Ask SST</button></section><section class="panel pad"><div class="heading"><h3>Teaching flow</h3></div><div class="three"><div class="feature"><strong>🧠 Understand</strong><span>Simple first, then depth.</span></div><div class="feature"><strong>🗣️ Explain</strong><span>Hinglish + examples.</span></div><div class="feature"><strong>🎯 Remember</strong><span>Recap + memory trick.</span></div></div></section></div>`;
+ $("#runMode").onclick=()=>{let q=$("#modeInput").value.trim();if(q){state.page="ask";save();ask(q)}else toast("Topic likho")};
+ $("#askMode").onclick=()=>{let q=$("#modeInput").value.trim();state.page="ask";save();renderAsk();if(q){$("#prompt").value=q;setTimeout(()=>$("#send").click(),40)}};
+}
+function renderTimeline(){
+ $("#pageTitle").textContent="Timeline Builder";$("#content").innerHTML=`<section class="panel pad"><div class="heading"><div><span class="badge">⏳ TIMELINE</span><h2>Timeline Builder</h2><p class="copy">Historical events ko chronological chain mein arrange karo.</p></div></div><div class="field"><label>TOPIC</label><input class="input" id="timelineInput" placeholder="Hitler / French Revolution / Industrial Revolution"></div><button class="btn primary" id="timelineRun">Build Timeline</button><div id="timelineOut" style="margin-top:18px"></div></section>`;
+ $("#timelineRun").onclick=()=>{let q=$("#timelineInput").value.trim();if(!q)return toast("Topic likho");let d=timelineData(q);$("#timelineOut").innerHTML=`<div class="timeline">${d.map(x=>`<div class="t-item"><div class="t-year">${x[0]}</div><div class="t-box"><strong>${x[1]}</strong><span>${x[2]}</span></div></div>`).join("")}</div>`};
+}
+function timelineData(q){let s=q.toLowerCase();if(s.includes("hitler")||s.includes("nazi"))return [["1919","Post-war Germany","Germany faces political and economic instability after World War I."],["1920s","Nazi rise","Nazi Party grows by exploiting crisis and resentment."],["1933","Hitler becomes Chancellor","Hitler takes office and rapidly establishes dictatorship."],["1939","War begins in Europe","Germany invades Poland; Britain and France declare war."],["1941–45","Mass murder and total war","Nazi persecution and the Holocaust occur amid the wider war."],["1945","Nazi Germany defeated","The European war ends; Hitler dies in April 1945."]];if(s.includes("french"))return [["1789","Revolution begins","Inequality, financial crisis and political conflict."],["1789","Bastille","Famous symbol of revolutionary upheaval."],["1791","Constitutional phase","France adopts a constitutional framework."],["1792","Republic","Monarchy is overthrown and France becomes a republic."],["1793–94","Reign of Terror","Radical phase and political repression."],["1799","Napoleon rises","Coup ends the Directory."]];if(s.includes("industrial"))return [["18th c.","Early industrial change","Mechanisation expands in Britain."],["1760s–70s","Textile innovation","Spinning and weaving are transformed."],["Late 18th c.","Steam power","Steam power becomes increasingly important."],["19th c.","Factory & urban growth","Industrialisation spreads and cities expand."]];return [["Background","Before the event","Identify conditions before the main change."],["Turning point","Main event","Place the major development here."],["Aftermath","Consequences","Record immediate and long-term effects."],["Legacy","Why it matters","Connect the topic to later developments."]]}
+function renderQuiz(){state.mode="normal";$("#pageTitle").textContent="Quiz Lab";$("#content").innerHTML=`<section class="panel pad"><div class="heading"><div><span class="badge">🧠 QUIZ LAB</span><h2>Quiz Lab</h2><p class="copy">Topic do aur instant MCQ practice karo.</p></div><span class="badge" id="score">Score: 0</span></div><div class="field"><label>TOPIC</label><input class="input" id="quizTopic" placeholder="Hitler / Democracy / French Revolution / Geography"></div><button class="btn primary" id="quizStart">Start Quiz</button><div id="quizArea" style="margin-top:17px"></div></section>`;let quiz=[],i=0,score=0;$("#quizStart").onclick=()=>{quiz=makeQuiz($("#quizTopic").value||"SST");i=0;score=0;draw()};function draw(){if(i>=quiz.length){$("#quizArea").innerHTML=`<div class="feature"><h3>🎉 Complete</h3><p>Your score: <strong>${score}/${quiz.length}</strong></p><button class="btn primary" id="again">Try Again</button></div>`;$("#again").onclick=()=>$("#quizStart").click();return}let q=quiz[i];$("#score").textContent=`Score: ${score}`;$("#quizArea").innerHTML=`<div class="feature"><span class="badge">Question ${i+1}/${quiz.length}</span><h3>${esc(q.q)}</h3>${q.o.map((x,n)=>`<button class="quiz-option" data-o="${n}">${esc(x)}</button>`).join("")}<p class="copy" id="feedback"></p></div>`;$$(".quiz-option").forEach(b=>b.onclick=()=>{let n=+b.dataset.o;$$(".quiz-option").forEach(x=>x.disabled=true);if(n===q.a){b.classList.add("correct");score++;$("#feedback").textContent="✅ Correct"}else{b.classList.add("wrong");$(`.quiz-option[data-o="${q.a}"]`).classList.add("correct");$("#feedback").textContent="❌ Correct answer highlighted"};setTimeout(()=>{i++;draw()},600)})}}
+function makeQuiz(t){let s=t.toLowerCase();if(s.includes("hitler")||s.includes("nazi"))return[{q:"Hitler became Chancellor of Germany in?",o:["1920","1933","1939","1945"],a:1},{q:"Nazi ideology was characterised by?",o:["Racism and antisemitism","Only environmentalism","No nationalism","Universal equality"],a:0},{q:"Germany invaded Poland in?",o:["1933","1938","1939","1945"],a:2},{q:"The Holocaust refers to?",o:["Systematic persecution and mass murder of European Jews by Nazi Germany and its collaborators","A trade policy","A river system","A constitutional amendment"],a:0},{q:"Nazi Germany was defeated in?",o:["1939","1942","1945","1950"],a:2}];if(s.includes("democracy"))return[{q:"Democracy is based on political authority of?",o:["People","Hereditary ruler","One company","Military only"],a:0},{q:"Can a republic also be democratic?",o:["Yes","No","Never","Only in ancient times"],a:0},{q:"Democracy emphasises?",o:["Participation and accountability","Hereditary privilege","No elections","No rights"],a:0},{q:"Republic concerns mainly the form of the?",o:["State","River","Climate","Crop"],a:0},{q:"Best memory?",o:["Democracy = people; Republic = non-hereditary public state","Democracy = ocean","Republic = river","They are always identical"],a:0}];if(s.includes("french")||s.includes("revolution"))return[{q:"French Revolution began in?",o:["1776","1789","1815","1914"],a:1},{q:"One major underlying cause was?",o:["Social inequality","Internet","Space travel","Robots"],a:0},{q:"Bastille became a symbol of?",o:["Revolutionary upheaval","Monsoon","Railway","Agriculture"],a:0},{q:"France became a republic in?",o:["1789","1791","1792","1799"],a:2},{q:"The Revolution had?",o:["Multiple social, economic and political causes","Only one cause","No political effects","No social consequences"],a:0}];return[{q:"A river is usually?",o:["Flowing watercourse","Standing salt-water body","Atmosphere","Mountain only"],a:0},{q:"A sea is generally?",o:["Part of an ocean, often partly enclosed by land","A river source","A desert","A political party"],a:0},{q:"Climate means?",o:["Long-term pattern of weather","Today's weather only","A river","A government"],a:0},{q:"A good SST answer begins with?",o:["Clear concept/definition","Unrelated story","Only conclusion","Nothing"],a:0},{q:"Best revision method?",o:["Explain in own words + example + recap","Only memorise random words","Skip examples","Avoid comparisons"],a:0}]}
+function renderLibrary(){state.page="library";$("#pageTitle").textContent="My SST Library";$("#content").innerHTML=`<div class="two"><section class="panel pad"><div class="heading"><div><span class="badge">📚 PERSONAL LIBRARY</span><h2>My SST Library</h2></div></div><p class="copy">TXT, MD, JSON and CSV files are indexed locally in your browser.</p><div class="field"><label>SELECT FILES</label><input class="input" id="fileInput" type="file" multiple accept=".txt,.md,.json,.csv"></div><button class="btn primary" id="indexFiles">Index Files</button> <button class="btn danger" id="wipeDocs">Remove Library</button></section><section class="panel pad"><div class="heading"><h3>Indexed material</h3><span class="badge">${state.docs.length} files</span></div>${state.docs.length?state.docs.map((d,i)=>`<div class="library-item"><div><strong>${esc(d.title)}</strong><small>${d.text.length} characters • local only</small></div><button class="mini" data-del="${i}">Remove</button></div>`).join(""):`<div class="empty">No personal material yet.</div>`}</section></div>`;$("#indexFiles").onclick=async()=>{let fs=$("#fileInput").files;if(!fs.length)return toast("File select karo");for(const f of fs){let text=await f.text();if(text.trim())state.docs.push({title:f.name,subject:"My SST Library",tags:[],text:text.slice(0,200000),userDoc:true})}save();renderLibrary();toast("Files indexed")};$("#wipeDocs").onclick=()=>{state.docs=[];save();renderLibrary();toast("Library removed")};$$("[data-del]").forEach(b=>b.onclick=()=>{state.docs.splice(+b.dataset.del,1);save();renderLibrary()})}
+function voice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return toast("Voice input supported nahi hai");let r=new SR();r.lang="en-IN";r.onresult=e=>{$("#prompt").value=e.results[0][0].transcript;toast("Voice captured")};r.onerror=()=>toast("Voice input failed");r.start()}
+function speak(t){if(!("speechSynthesis"in window))return toast("Read aloud supported nahi hai");speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(String(t).replace(/[#*`|]/g," "));u.rate=.95;speechSynthesis.speak(u)}
+function settings(){let o=document.createElement("div");o.className="overlay";o.innerHTML=`<div class="modal"><div class="modal-head"><h2>⚙️ Settings</h2><button class="close" id="close">✕</button></div><div class="field"><label>BACKEND URL</label><input class="input" id="api" value="${esc(SST_CONFIG.API_URL)}" placeholder="https://your-worker.workers.dev"></div><div class="two"><div class="field"><label>LANGUAGE</label><select class="select" id="lang"><option>Hinglish</option><option>English</option><option>Hindi</option></select></div><div class="field"><label>DETAIL</label><select class="select" id="detail"><option>Deep but simple</option><option>Balanced</option><option>Very detailed</option></select></div></div><div class="field"><label>TEACHING LEVEL</label><input class="input" id="level" value="${esc(state.prefs.level)}"></div><p class="copy">API key frontend mein mat rakho. Sirf deployed Worker URL yahan rakho.</p><button class="btn primary" id="saveSettings">Save Settings</button></div>`;document.body.appendChild(o);$("#lang").value=state.prefs.language;$("#detail").value=state.prefs.detail;$("#close").onclick=()=>o.remove();$("#saveSettings").onclick=()=>{SST_CONFIG.API_URL=$("#api").value.trim();localStorage.setItem("sst_guru_runtime",JSON.stringify({API_URL:SST_CONFIG.API_URL}));state.prefs.language=$("#lang").value;state.prefs.detail=$("#detail").value;state.prefs.level=$("#level").value||"CBSE / School";save();o.remove();toast("Settings saved")}}
+$("#newChat").onclick=()=>{state.messages=[];state.mode="normal";state.page="ask";save();renderAsk();toast("New conversation")};
+$("#themeBtn").onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";document.documentElement.dataset.theme=state.theme;save();toast("Theme changed")};
+$("#menuBtn").onclick=()=>$("#sidebar").classList.toggle("open");
+$("#clearBtn").onclick=()=>{if(confirm("Clear chats and personal library?")){localStorage.removeItem(KEY);localStorage.removeItem(OLD);localStorage.removeItem("sst_guru_runtime");location.reload()}};
+$("#exportBtn").onclick=()=>{let txt=state.messages.map(m=>`${m.role.toUpperCase()}\n${m.content}`).join("\n\n---\n\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));a.download="sst-guru-conversation.txt";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast("Conversation exported")};
+$("#settingsBtn").onclick=settings;
+function render(){document.documentElement.dataset.theme=state.theme;if(state.page==="ask")renderAsk();else if(["story","word","difference","exam","teacher"].includes(state.page))renderMode(state.page);else if(state.page==="timeline")renderTimeline();else if(state.page==="quiz")renderQuiz();else if(state.page==="library")renderLibrary();else renderAsk();bindNav()}
+render();
 })();
