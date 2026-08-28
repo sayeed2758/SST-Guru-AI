@@ -1,4 +1,89 @@
-const SYSTEM=`You are SST GURU AI, a specialist Social Science teaching assistant. Domain: History, Geography, Civics/Political Science, Economics, society, culture and closely related Social Science only. If unrelated to SST, politely say you are SST-focused. The user is an SST teacher who may encounter unfamiliar terms and basic concepts. Prefer simple Hinglish unless asked otherwise. Explain like a patient expert teacher and storyteller: start simple, then add depth, analogies, mental pictures and cause→event→consequence. Never invent facts; mark disputed or uncertain historical claims briefly. Modes: normal=concept explanation; story=chronological story with setting, people/groups, conflict, turning point, consequences and exam takeaway; word=English meaning + Hinglish meaning + SST context + example; difference=clear comparison table + memory trick; exam=explanation + key points + practice-question angles; teacher=classroom-ready explanation + analogy + common confusion. Use supplied knowledge snippets as grounding without pretending they are official quotations.`;
-const cors=()=>({"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"Content-Type","Access-Control-Allow-Methods":"POST, OPTIONS"});
-const json=(d,s=200)=>new Response(JSON.stringify(d),{status:s,headers:{"Content-Type":"application/json",...cors()}});
-export default{async fetch(request,env){if(request.method==='OPTIONS')return new Response(null,{headers:cors()});const u=new URL(request.url);if(u.pathname!=='/chat')return json({status:'ok',service:'SST GURU AI'});if(request.method!=='POST')return json({error:'POST /chat required'},405);try{const b=await request.json(),message=String(b.message||'').trim(),mode=String(b.mode||'normal'),context=Array.isArray(b.context)?b.context.slice(0,8):[],history=Array.isArray(b.history)?b.history.slice(-12):[];if(!message)return json({error:'Message is required'},400);if(!env.OPENAI_API_KEY)return json({error:'OPENAI_API_KEY secret is missing in Worker.'},500);const snippets=context.map(x=>`[${x.subject||'SST'}] ${x.title}: ${x.text}`).join('\n\n');const content=`Mode: ${mode}\n\nRelevant local SST knowledge:\n${snippets||'(No matching local snippet.)'}\n\nCurrent user message:\n${message}`;const messages=[{role:'system',content:SYSTEM},...history.map(m=>({role:m.role==='assistant'?'assistant':'user',content:String(m.content).slice(0,6000)})),{role:'user',content}];const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${env.OPENAI_API_KEY}`},body:JSON.stringify({model:env.MODEL||'gpt-4o-mini',temperature:.35,messages})});const d=await r.json();if(!r.ok)return json({error:d?.error?.message||'AI provider error'},502);const answer=d?.choices?.[0]?.message?.content;if(!answer)return json({error:'Empty AI response'},502);return json({answer,mode})}catch(e){return json({error:e.message||'Server error'},500)}}};
+/*
+SST GURU AI — secure live backend
+Deploy as a Cloudflare Worker.
+Add secret: OPENAI_API_KEY
+Optional variable: MODEL
+*/
+const SYSTEM = `
+You are SST GURU AI — a specialist Social Science teaching assistant.
+
+DOMAIN:
+Only Social Science and closely related educational concepts: History, Geography, Civics/Political Science, Economics, society, culture, maps and timelines.
+For unrelated questions, politely state that you are SST-focused and do not behave as a general-purpose assistant.
+
+USER:
+The user is an SST teacher. They may encounter unfamiliar historical terms and even basic Geography/Civics distinctions. They prefer simple Hinglish unless another language is requested.
+
+STYLE:
+- Patient expert teacher + storyteller.
+- Simple first, deeper next.
+- Use analogies, examples and mental pictures.
+- History: chronology + cause → event → consequence.
+- Geography: precise definitions and everyday-vs-geographic distinctions.
+- Civics: explicitly untangle similar concepts.
+- Economics: practical examples.
+- Never invent facts. Mark disputed/uncertain claims.
+- Do not call a source official unless the supplied metadata establishes that.
+
+MODES:
+normal = concept explanation
+story = chronological narrative with setting, groups, conflict, turning point, consequences, recap
+word = simple English + Hinglish + SST context + example + memory trick
+difference = clean comparison + examples + memory trick
+exam = key concepts + answer structure + practice questions
+teacher = classroom-ready explanation + analogy + common student confusion
+`;
+
+const CORS = {
+ "Access-Control-Allow-Origin":"*",
+ "Access-Control-Allow-Headers":"Content-Type",
+ "Access-Control-Allow-Methods":"POST, OPTIONS"
+};
+const json=(d,s=200)=>new Response(JSON.stringify(d),{status:s,headers:{"Content-Type":"application/json",...CORS}});
+
+export default {
+ async fetch(req,env){
+  if(req.method==="OPTIONS")return new Response(null,{headers:CORS});
+  const url=new URL(req.url);
+  if(url.pathname!="/chat")return json({service:"SST GURU AI",status:"ok"});
+  if(req.method!="POST")return json({error:"POST /chat required"},405);
+  try{
+   if(!env.OPENAI_API_KEY)return json({error:"OPENAI_API_KEY secret is missing."},500);
+   const body=await req.json();
+   const message=String(body.message||"").trim();
+   const mode=String(body.mode||"normal");
+   const history=Array.isArray(body.history)?body.history.slice(-14):[];
+   const context=Array.isArray(body.context)?body.context.slice(0,8):[];
+   const prefs=body.prefs||{};
+   if(!message)return json({error:"Message is required."},400);
+
+   const sourceText=context.map(x=>`[${x.subject||"SST"}] ${x.title}: ${x.text}`).join("\n\n");
+   const userContent=`Mode: ${mode}
+Language/style preference: ${prefs.language||"Hinglish"}
+Detail: ${prefs.detail||"Deep but simple"}
+Teaching level: ${prefs.teacherLevel||"CBSE / School"}
+
+Retrieved SST material:
+${sourceText||"(No matching local material.)"}
+
+User question:
+${message}`;
+
+   const messages=[
+    {role:"system",content:SYSTEM},
+    ...history.map(m=>({role:m.role==="assistant"?"assistant":"user",content:String(m.content).slice(0,7000)})),
+    {role:"user",content:userContent}
+   ];
+   const r=await fetch("https://api.openai.com/v1/chat/completions",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":`Bearer ${env.OPENAI_API_KEY}`},
+    body:JSON.stringify({model:env.MODEL||"gpt-4o-mini",temperature:.32,messages})
+   });
+   const data=await r.json();
+   if(!r.ok)return json({error:data?.error?.message||"Provider error"},502);
+   const answer=data?.choices?.[0]?.message?.content;
+   if(!answer)return json({error:"Empty response"},502);
+   return json({answer,mode});
+  }catch(e){return json({error:e.message||"Server error"},500)}
+ }
+};
