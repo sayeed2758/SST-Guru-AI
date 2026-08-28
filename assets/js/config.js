@@ -1,7 +1,1 @@
-window.SST_CONFIG = {
-  // Deploy the Cloudflare Worker (or another compatible backend) and paste its URL here.
-  // Example: "https://sst-guru-ai.your-name.workers.dev"
-  API_URL: "PASTE_YOUR_BACKEND_URL_HERE",
-  APP_NAME: "SST GURU AI",
-  MAX_CONTEXT_ITEMS: 6
-};
+window.SST_CONFIG={API_URL:"PASTE_YOUR_BACKEND_URL_HERE",APP_NAME:"SST GURU AI",MAX_CONTEXT_ITEMS:8,MAX_HISTORY_MESSAGES:12,DEMO_MODE:true};
