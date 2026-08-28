@@ -1,68 +1,61 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0b1220">
-  <meta name="description" content="SST GURU AI — Personal Social Science learning and teaching assistant">
-  <title>SST GURU AI • Personal Social Science Assistant</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/app.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>SST GURU AI</title>
+<link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-<div id="app" class="app">
-  <aside id="sidebar" class="sidebar">
+<div id="app">
+  <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <div class="brand-logo">📚</div>
-      <div><div class="brand-name">SST GURU</div><div class="brand-ai">AI</div></div>
+      <div class="brand-icon">📚</div>
+      <div><strong>SST GURU</strong><small>PERSONAL AI</small></div>
     </div>
-    <button class="primary-btn new-chat" id="newChatBtn">＋ New Conversation</button>
+    <button class="new-chat" id="newChat">＋ New Conversation</button>
 
-    <div class="nav-label">LEARNING</div>
-    <nav class="nav">
-      <button class="nav-item active" data-screen="ask">💬 <span>Ask SST</span></button>
-      <button class="nav-item" data-screen="story">📖 <span>Story Mode</span></button>
-      <button class="nav-item" data-screen="word">🔎 <span>Word Explainer</span></button>
-      <button class="nav-item" data-screen="difference">⚖️ <span>Difference Maker</span></button>
-      <button class="nav-item" data-screen="timeline">⏳ <span>Timeline</span></button>
-      <button class="nav-item" data-screen="quiz">🧠 <span>Quiz Lab</span></button>
+    <div class="nav-title">LEARN</div>
+    <nav>
+      <button class="nav-btn active" data-page="ask">💬 <span>Ask SST</span></button>
+      <button class="nav-btn" data-page="story">📖 <span>Story Mode</span></button>
+      <button class="nav-btn" data-page="word">🔎 <span>Word Explainer</span></button>
+      <button class="nav-btn" data-page="difference">⚖️ <span>Difference Maker</span></button>
+      <button class="nav-btn" data-page="timeline">⏳ <span>Timeline Builder</span></button>
+      <button class="nav-btn" data-page="quiz">🧠 <span>Quiz Lab</span></button>
     </nav>
 
-    <div class="nav-label">TEACHING</div>
-    <nav class="nav">
-      <button class="nav-item" data-screen="exam">🎯 <span>Exam Mode</span></button>
-      <button class="nav-item" data-screen="teacher">👨‍🏫 <span>Teacher Studio</span></button>
-      <button class="nav-item" data-screen="library">📚 <span>My SST Library</span></button>
+    <div class="nav-title">TEACH</div>
+    <nav>
+      <button class="nav-btn" data-page="exam">🎯 <span>Exam Mode</span></button>
+      <button class="nav-btn" data-page="teacher">👨‍🏫 <span>Teacher Studio</span></button>
+      <button class="nav-btn" data-page="library">📚 <span>My SST Library</span></button>
     </nav>
 
-    <div class="sidebar-foot">
-      <button class="nav-item" id="themeBtn">🌙 <span>Theme</span></button>
-      <button class="nav-item" id="exportAllBtn">⬇️ <span>Export Chat</span></button>
-      <button class="nav-item danger-text" id="clearBtn">🗑️ <span>Clear Local Data</span></button>
+    <div class="sidebar-bottom">
+      <button class="nav-btn" id="themeBtn">🌙 <span>Toggle Theme</span></button>
+      <button class="nav-btn" id="exportBtn">⬇️ <span>Export Conversation</span></button>
+      <button class="nav-btn danger" id="clearBtn">🗑️ <span>Clear Local Data</span></button>
     </div>
   </aside>
 
   <main class="main">
     <header class="topbar">
-      <button class="icon-btn" id="menuBtn" aria-label="Open menu">☰</button>
-      <div class="top-context"><span class="status-dot"></span><span id="screenTitle">Ask SST</span></div>
-      <div class="top-actions">
-        <span class="pill">SST ONLY</span>
-        <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
+      <button class="menu-btn" id="menuBtn">☰</button>
+      <div class="page-title"><i></i><span id="pageTitle">Ask SST</span></div>
+      <div class="top-right">
+        <span class="sst-badge">SST ONLY</span>
+        <button class="gear" id="settingsBtn">⚙️</button>
       </div>
     </header>
-
-    <section id="screen" class="screen"></section>
+    <div id="content"></div>
   </main>
 </div>
 
 <div id="toast" class="toast"></div>
+<div id="modalRoot"></div>
 
-<!-- Optional browser-side PDF text extraction for Library uploads -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.min.mjs" type="module"></script>
 <script src="assets/js/config.js"></script>
 <script src="assets/js/knowledge.js"></script>
 <script src="assets/js/app.js"></script>
