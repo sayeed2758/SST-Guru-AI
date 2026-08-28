@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>SST GURU AI — Personal Social Science Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/chat.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">📚</div>
+        <div><strong>SST GURU</strong><span>AI</span></div>
+      </div>
+
+      <button class="new-chat" id="newChatBtn">＋ New Conversation</button>
+
+      <nav class="nav">
+        <button class="nav-item active" data-view="chat">💬 <span>Ask SST</span></button>
+        <button class="nav-item" data-view="story">📖 <span>Story Mode</span></button>
+        <button class="nav-item" data-view="word">🔎 <span>Word Explainer</span></button>
+        <button class="nav-item" data-view="difference">⚖️ <span>Difference Maker</span></button>
+        <button class="nav-item" data-view="exam">🎯 <span>Exam Mode</span></button>
+        <button class="nav-item" data-view="teacher">👨‍🏫 <span>Teacher Mode</span></button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <button class="nav-item" id="themeBtn">🌙 <span>Toggle Theme</span></button>
+        <button class="nav-item" id="clearBtn">🗑️ <span>Clear History</span></button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-btn mobile-only" id="menuBtn">☰</button>
+        <div class="top-title"><span class="status-dot"></span><span id="modeTitle">Ask SST</span></div>
+        <div class="top-actions">
+          <span class="scope-badge">SST ONLY</span>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="hero" id="hero">
+          <div class="hero-kicker">YOUR PERSONAL SOCIAL SCIENCE AI</div>
+          <h1>Samajhna hai?<br><span>Story ki tarah samjho.</span></h1>
+          <p>History, Geography, Civics & Economics — simple Hinglish, deep concepts, clear examples.</p>
+          <div class="quick-grid">
+            <button class="quick-card" data-prompt="French Revolution ko ek interesting story ki tarah samjhao. Background se consequences tak.">
+              <b>📖</b><span>History Story</span><small>French Revolution</small>
+            </button>
+            <button class="quick-card" data-prompt="River, Sea, Ocean aur Lake ka difference simple Hinglish mein examples ke saath samjhao.">
+              <b>🌊</b><span>Geography Basics</span><small>River vs Sea vs Ocean</small>
+            </button>
+            <button class="quick-card" data-prompt="Mercantilism ka simple meaning, history context aur ek daily-life analogy batao.">
+              <b>🔎</b><span>Hard Word</span><small>Mercantilism</small>
+            </button>
+            <button class="quick-card" data-prompt="Democracy aur Republic mein clear difference table aur examples ke saath batao.">
+              <b>⚖️</b><span>Compare</span><small>Democracy vs Republic</small>
+            </button>
+          </div>
+        </div>
+
+        <div class="workspace">
+          <div class="chat-list" id="chatList"></div>
+          <div class="typing" id="typing"><span></span><span></span><span></span><em>SST GURU is thinking…</em></div>
+        </div>
+
+        <div class="composer-wrap">
+          <div class="mode-chips" id="modeChips">
+            <button data-mode="normal" class="chip active">🧠 Explain</button>
+            <button data-mode="story">📖 Story</button>
+            <button data-mode="word">🔎 Word</button>
+            <button data-mode="difference">⚖️ Difference</button>
+            <button data-mode="exam">🎯 Exam</button>
+            <button data-mode="teacher">👨‍🏫 Teacher</button>
+          </div>
+          <div class="composer">
+            <textarea id="promptInput" rows="1" placeholder="Ask anything about SST…"></textarea>
+            <button class="send-btn" id="sendBtn" title="Send">➤</button>
+          </div>
+          <div class="composer-note">SST-focused • History • Geography • Civics • Economics</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/knowledge.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
